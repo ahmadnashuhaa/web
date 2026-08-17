@@ -17,6 +17,7 @@ class Project {
     required this.solution,
     required this.features,
     this.downloadUrl,
+    this.imageUrl,
   });
 
   final String title;
@@ -41,6 +42,13 @@ class Project {
   /// Direct link to a downloadable file (zip, apk, indicator script,
   /// etc). When null, the download button is hidden for that project.
   final String? downloadUrl;
+
+  /// Preview photo. Accepts EITHER:
+  ///  - a local asset path, e.g. 'assets/images/my-app.jpg'
+  ///    (must be registered under `assets:` in pubspec.yaml)
+  ///  - a full network URL, e.g. 'https://example.com/shot.jpg'
+  /// When null, a gradient placeholder is shown instead.
+  final String? imageUrl;
 }
 
 /// The single source of truth for every featured project — used by
@@ -69,7 +77,8 @@ const List<Project> kProjects = [
       'Dividend tracking',
       'Built-in investment calculator',
     ],
-    downloadUrl: 'https://example.com/downloads/personal-finance-app.zip',
+    downloadUrl: 'https://github.com/ahmadnashuhaa/web/releases/download/v1.1.0/app-release.apk.sha1',
+    imageUrl: 'assets/images/ft1.jpeg',
   ),
   Project(
     title: 'Trading Signal Indicator',
@@ -90,7 +99,8 @@ const List<Project> kProjects = [
       'Configurable sensitivity',
       'Alerts on new signals',
     ],
-    downloadUrl: 'https://example.com/downloads/trading-signal-indicator.pine',
+    downloadUrl: 'https://drive.google.com/file/d/16rf4LGBZ_VW3k7qMUvK_RPIeLReZrLHi/view?usp=drive_link',
+    imageUrl: 'assets/images/ft2.jpeg',
   ),
   Project(
     title: 'Trading EA / Bot',
@@ -112,7 +122,8 @@ const List<Project> kProjects = [
       'Session & news-time filters',
       'Built-in trade logging',
     ],
-    downloadUrl: 'https://example.com/downloads/trading-ea-bot.zip',
+    downloadUrl: 'https://drive.google.com/file/d/15DiEAWYQRx9cqJmU1lmjilgrxMxwNqqT/view?usp=drive_link',
+    imageUrl: 'assets/images/ft3.jpeg',
   ),
   Project(
     title: 'Brand Identity Set',
@@ -133,6 +144,7 @@ const List<Project> kProjects = [
       'Social media templates',
       'Brand usage guide',
     ],
-    downloadUrl: 'https://example.com/downloads/brand-identity-set.zip',
+    downloadUrl: 'https://wa.me/p/26806408655694071/62882010480693',
+    imageUrl: 'assets/images/ft4.jpeg',
   ),
 ];

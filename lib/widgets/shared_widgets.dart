@@ -234,6 +234,7 @@ class ProjectCard extends StatelessWidget {
     required this.tech,
     required this.description,
     this.previewColor = AppColors.accent,
+    this.imageUrl,
     this.onTap,
   });
 
@@ -241,6 +242,7 @@ class ProjectCard extends StatelessWidget {
   final String tech;
   final String description;
   final Color previewColor;
+  final String? imageUrl;
   final VoidCallback? onTap;
 
   @override
@@ -252,18 +254,25 @@ class ProjectCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Container(
-            height: 120,
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [
-                  previewColor.withValues(alpha: 0.35),
-                  AppColors.background,
-                ],
-              ),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: SizedBox(
+              height: 120,
+              width: double.infinity,
+              child: imageUrl != null
+                  ? SmartImage(imageUrl!, fit: BoxFit.cover)
+                  : Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            previewColor.withValues(alpha: 0.35),
+                            AppColors.background,
+                          ],
+                        ),
+                      ),
+                    ),
             ),
           ),
           const SizedBox(height: 14),
@@ -339,6 +348,59 @@ class PrimaryButton extends StatelessWidget {
             ),
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Renders an image from either a local asset path or a network URL,
+/// picking the right loader automatically based on whether [source]
+/// starts with "http". Shows a subtle loading state for network images
+/// and a neutral placeholder if loading fails (e.g. broken link, asset
+/// not yet added to pubspec.yaml).
+class SmartImage extends StatelessWidget {
+  const SmartImage(this.source, {super.key, this.fit = BoxFit.cover});
+
+  final String source;
+  final BoxFit fit;
+
+  bool get _isNetwork => source.startsWith('http');
+
+  @override
+  Widget build(BuildContext context) {
+    if (_isNetwork) {
+      return Image.network(
+        source,
+        fit: fit,
+        loadingBuilder: (context, child, progress) {
+          if (progress == null) return child;
+          return const ColoredBox(
+            color: AppColors.card,
+            child: Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.accent),
+              ),
+            ),
+          );
+        },
+        errorBuilder: (context, error, stackTrace) => _errorPlaceholder(),
+      );
+    }
+
+    return Image.asset(
+      source,
+      fit: fit,
+      errorBuilder: (context, error, stackTrace) => _errorPlaceholder(),
+    );
+  }
+
+  Widget _errorPlaceholder() {
+    return const ColoredBox(
+      color: AppColors.card,
+      child: Center(
+        child: Icon(Icons.image_not_supported_outlined, color: AppColors.textSecondary, size: 28),
       ),
     );
   }

@@ -147,38 +147,34 @@ class ProjectDetailPage extends StatelessWidget {
                     ),
                     const SizedBox(height: 40),
 
-                    _CaseStudySection(
-                      title: 'Features',
-                      accentColor: project.color,
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          for (final feature in project.features)
-                            Padding(
-                              padding: const EdgeInsets.only(bottom: 10),
-                              child: Row(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Icon(Icons.check_circle, size: 18, color: project.color),
-                                  const SizedBox(width: 10),
-                                  Expanded(
-                                    child: Text(
-                                      feature,
-                                      style: const TextStyle(
-                                        color: AppColors.textPrimary,
-                                        fontSize: 14,
-                                        height: 1.5,
-                                      ),
-                                    ),
+                    // Real photo when the project has one, gradient
+                    // placeholder otherwise.
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        height: mobile ? 220 : 380,
+                        width: double.infinity,
+                        decoration: BoxDecoration(
+                          border: Border.all(color: AppColors.cardBorder),
+                        ),
+                        child: project.imageUrl != null
+                            ? SmartImage(project.imageUrl!, fit: BoxFit.cover)
+                            : Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topLeft,
+                                    end: Alignment.bottomRight,
+                                    colors: [
+                                      project.color.withValues(alpha: 0.35),
+                                      AppColors.card,
+                                    ],
                                   ),
-                                ],
+                                ),
                               ),
-                            ),
-                        ],
                       ),
                     ),
                     const SizedBox(height: 56),
-
+                    
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(28),

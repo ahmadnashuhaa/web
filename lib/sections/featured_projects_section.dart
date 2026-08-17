@@ -70,6 +70,7 @@ class _FeaturedProjectsSectionState extends State<FeaturedProjectsSection> {
                   tech: p.techStack.join(' • '),
                   description: p.tagline,
                   previewColor: p.color,
+                  imageUrl: p.imageUrl,
                   onTap: () => _openProject(p),
                 );
               },
