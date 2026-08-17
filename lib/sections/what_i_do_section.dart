@@ -18,7 +18,7 @@ class WhatIDoSection extends StatelessWidget {
             title: 'Build. Trade. Create. Learn.',
             subtitle:
                 'Four pillars, one ecosystem — digital products, trading '
-                'tools, creative work and education, all built by the same hand.',
+                'tools, creative work and education, all built by the sytem.',
           ),
           SizedBox(height: 32),
           Wrap(

@@ -25,7 +25,7 @@ void _showError(BuildContext context, String url) {
 
 /// Your WhatsApp number in international format, digits only
 /// (no "+", no spaces, no dashes). Replace with your real number.
-const String kWhatsAppNumber = '6281234567890';
+const String kWhatsAppNumber = '62882010480693';
 
 /// Opens WhatsApp with a prefilled message built from whichever pieces
 /// are provided. Used both for a quick "order this project" tap (only

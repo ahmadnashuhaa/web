@@ -12,10 +12,10 @@ class FooterSection extends StatelessWidget {
 
   // Replace with your real profile URLs.
   static const _socialLinks = <MapEntry<String, String>>[
-    MapEntry('Instagram', 'https://instagram.com/yourname'),
-    MapEntry('YouTube', 'https://youtube.com/@yourname'),
-    MapEntry('GitHub', 'https://github.com/yourname'),
-    MapEntry('TradingView', 'https://tradingview.com/u/yourname'),
+    MapEntry('Instagram', 'https://instagram.com/pfos_app'),
+    MapEntry('YouTube', 'https://youtube.com/@none'),
+    MapEntry('GitHub', 'https://github.com/none'),
+    MapEntry('TradingView', 'https://tradingview.com/u/none'),
   ];
 
   @override

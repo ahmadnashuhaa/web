@@ -339,7 +339,7 @@ class _HeroText extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
-            'BUILD. CREATE.\nTRADE. LEARN.',
+            'WELCOME\nDUKION',
             textAlign: TextAlign.center,
             style: TextStyle(
               fontSize: 42,

@@ -1,0 +1,17 @@
+# Flutter build artifacts — regenerated fresh on every Vercel build,
+# no need to upload them from your machine/repo.
+build/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+
+# Platform folders not needed for a web-only deploy.
+android/
+ios/
+linux/
+macos/
+windows/
+
+# IDE / editor clutter.
+.idea/
+.vscode/
