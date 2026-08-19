@@ -77,7 +77,7 @@ const List<Project> kProjects = [
       'Dividend tracking',
       'Built-in investment calculator',
     ],
-    downloadUrl: 'https://github.com/ahmadnashuhaa/web/releases/download/v1.1.0/app-release.apk.sha1',
+    downloadUrl: 'https://github.com/ahmadnashuhaa/web/releases/download/v1.2.0/app-release.apk',
     imageUrl: 'assets/images/ft1.jpeg',
   ),
   Project(
