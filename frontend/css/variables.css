@@ -1,0 +1,125 @@
+/* ==========================================================================
+   DESIGN TOKENS — Digital Studio
+   Single source of truth. Every color/spacing/type value elsewhere in the
+   codebase should reference one of these variables — never a raw hex or px.
+
+   Mapping note: --color-primary keeps the original Flutter AppColors.accent
+   (#6C63FF, purple — build/create/design) and --color-secondary keeps
+   AppColors.accentAlt (#00E5FF, cyan — trading). This preserves the
+   existing 2-accent visual language from the Flutter app; do not add a
+   third accent color without a strong reason.
+   ========================================================================== */
+
+:root {
+  /* ---- Color: Deep Space Surfaces ---- */
+  --color-bg: #05060F;                     /* Deep space black-navy */
+  --color-bg-secondary: #0A0E1F;           /* Secondary celestial bg */
+  --color-surface: #0E1428;                 /* Glassmorphism surface */
+  --color-surface-elevated: #151E3A;        /* Elevated card surface */
+  --color-surface-translucent: rgba(14, 20, 40, 0.72);
+  --color-border: rgba(255, 255, 255, 0.10);
+  --color-border-strong: rgba(255, 255, 255, 0.22);
+  --color-border-glow: rgba(124, 58, 237, 0.45);
+
+  /* ---- Color: WCAG AA High-Contrast Text ---- */
+  --color-text: #F8FAFC;                    /* Pure star-white */
+  --color-text-secondary: #E2E8F0;          /* Crisp high-contrast slate */
+  --color-text-muted: #94A3B8;              /* Soft celestial silver (never murky) */
+
+  /* ---- Color: Nebula Gradient Accents & Pillars ---- */
+  --color-violet: #7C3AED;                  /* BUILD pillar / core nebula */
+  --color-indigo: #4F46E5;                  /* LEARN pillar / cosmic transition */
+  --color-cyan: #22D3EE;                    /* TRADE pillar / signal transmission */
+  --color-magenta: #D946EF;                 /* CREATE pillar / design constellation */
+  --color-gold: #FBBF24;                    /* Star highlight & certification */
+
+  /* Backwards-compatible aliases */
+  --color-primary: #7C3AED;
+  --color-primary-hover: #9055FF;
+  --color-primary-muted: rgba(124, 58, 237, 0.16);
+
+  --color-secondary: #22D3EE;
+  --color-secondary-hover: #5EEAD4;
+  --color-secondary-muted: rgba(34, 211, 238, 0.16);
+
+  /* ---- Color: Semantic & Standout CTA ---- */
+  --color-whatsapp: #22C55E;                /* WhatsApp standout green */
+  --color-success: #22C55E;
+  --color-warning: #FBBF24;
+  --color-error: #F43F5E;
+
+  /* ---- Gradients ---- */
+  --gradient-nebula: linear-gradient(135deg, #7C3AED 0%, #4F46E5 35%, #22D3EE 70%, #D946EF 100%);
+  --gradient-warp: linear-gradient(135deg, #7C3AED 0%, #4F46E5 100%);
+  --gradient-trade: linear-gradient(135deg, #22D3EE 0%, #06B6D4 100%);
+  --gradient-design: linear-gradient(135deg, #D946EF 0%, #C026D3 100%);
+  --gradient-text-hero: linear-gradient(180deg, #FFFFFF 20%, #E2E8F0 60%, #94A3B8 100%);
+
+  /* ---- Typography ---- */
+  --font-display: 'Space Grotesk', 'Sora', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-body: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+
+  --text-xs: 0.75rem;                              /* 12px */
+  --text-sm: 0.875rem;                             /* 14px */
+  --text-md: 1rem;                                 /* 16px (body baseline) */
+  --text-lg: 1.125rem;                             /* 18px */
+  --text-xl: clamp(1.25rem, 1rem + 1.2vw, 1.625rem); /* 20-26px */
+  --text-2xl: clamp(1.625rem, 1.2rem + 1.8vw, 2.25rem); /* 26-36px */
+  --text-3xl: clamp(2.25rem, 1.5rem + 3vw, 3.5rem);   /* 36-56px */
+  --text-hero: clamp(3rem, 2rem + 5vw, 6.5rem);     /* 48-104px */
+
+  --leading-tight: 1.12;
+  --leading-normal: 1.6;
+  --leading-relaxed: 1.75;
+
+  /* ---- Spacing scale ---- */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 20px;
+  --space-6: 24px;
+  --space-7: 28px;
+  --space-8: 32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-14: 56px;
+  --space-16: 64px;
+  --space-20: 80px;
+  --space-24: 96px;
+  --space-32: 128px;
+
+  /* ---- Radius ---- */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+  --radius-full: 9999px;
+
+  /* ---- Glow Shadows ---- */
+  --shadow-card: 0 16px 36px rgba(0, 0, 0, 0.45);
+  --shadow-glow-violet: 0 0 28px rgba(124, 58, 237, 0.35);
+  --shadow-glow-cyan: 0 0 28px rgba(34, 211, 238, 0.35);
+  --shadow-glow-magenta: 0 0 28px rgba(217, 70, 239, 0.35);
+  --shadow-glow-whatsapp: 0 0 28px rgba(34, 197, 94, 0.38);
+
+  /* ---- Motion ---- */
+  --duration-fast: 150ms;
+  --duration-normal: 260ms;
+  --duration-slow: 500ms;
+  --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* ---- Layout ---- */
+  --container-max: 1240px;
+  --container-padding: clamp(20px, 5vw, 64px);
+  --nav-height: 76px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duration-fast: 0ms;
+    --duration-normal: 0ms;
+    --duration-slow: 0ms;
+  }
+}

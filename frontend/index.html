@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+  <title>DUKION — Build. Trade. Create. Learn.</title>
+  <meta name="description" content="DUKION — Deep-space digital studio. Four pillars, one ecosystem: digital products, trading tools, creative design, and trader education." />
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="DUKION — Build. Trade. Create. Learn." />
+  <meta property="og:description" content="Four pillars, one ecosystem: digital products, trading tools, creative design, and education." />
+  <meta property="og:url" content="https://dukion.vercel.app/" />
+  <meta property="og:image" content="icons/Icon-512.png" />
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="DUKION — Build. Trade. Create. Learn." />
+  <meta name="twitter:description" content="Four pillars, one ecosystem: digital products, trading tools, creative design, and education." />
+  <meta name="twitter:image" content="icons/Icon-512.png" />
+
+  <link rel="icon" type="image/png" href="favicon.png" />
+
+  <!-- Google Fonts: Space Grotesk (Futuristic headings) + Inter (Crisp body) -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700;800&display=swap" rel="stylesheet" />
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/reset.css" />
+  <link rel="stylesheet" href="css/variables.css" />
+  <link rel="stylesheet" href="css/components.css" />
+  <link rel="stylesheet" href="css/sections.css" />
+  <link rel="stylesheet" href="css/style.css" />
+</head>
+<body>
+
+  <!-- =======================================================================
+       1. GLOBAL 3D GALAXY CANVAS & AMBIENT ELEMENTS
+       ======================================================================= -->
+  <canvas id="galaxyCanvas" aria-hidden="true"></canvas>
+
+  <div class="nebula-glow nebula-glow--hero" aria-hidden="true"></div>
+  <div class="nebula-glow nebula-glow--projects" aria-hidden="true"></div>
+  <div class="nebula-glow nebula-glow--trading" aria-hidden="true"></div>
+
+  <!-- Non-obstructive ambient micro-cursor -->
+  <div id="cursorGlow" aria-hidden="true"></div>
+
+  <!-- Galaxy Forming Loader (1.2–1.4s intro, auto-dismisses) -->
+  <div id="galaxyLoader" role="status" aria-label="Initializing Galaxy">
+    <canvas id="loaderCanvas"></canvas>
+    <div class="loader__hint">FORMING GALAXY CORE · TAP TO SKIP</div>
+  </div>
+
+  <!-- =======================================================================
+       2. NAVBAR (Sticky Glassmorphism Header)
+       ======================================================================= -->
+  <header class="navbar" id="navbar">
+    <div class="container navbar__inner">
+      <a href="#top" class="navbar__brand">
+        <span class="navbar__brand-dot"></span>
+        DUKION
+      </a>
+
+      <nav class="navbar__links" aria-label="Main navigation">
+        <a class="navbar__link" href="#projects" data-nav-link data-section="projects">Projects</a>
+        <a class="navbar__link" href="#services" data-nav-link data-section="services">Services</a>
+        <a class="navbar__link" href="#trading" data-nav-link data-section="trading">Trading</a>
+        <a class="navbar__link" href="#education" data-nav-link data-section="education">Education</a>
+        <a class="navbar__link" href="#about" data-nav-link data-section="about">About</a>
+      </nav>
+
+      <a href="#contact" class="btn btn--warp navbar__cta" data-nav-link data-section="contact">
+        Let's Work Together
+      </a>
+
+      <button class="navbar__menu-toggle" id="menuToggle" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
+        ☰
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile Drawer -->
+  <div class="mobile-menu" id="mobileMenu" data-open="false" role="dialog" aria-label="Mobile navigation" aria-modal="true">
+    <a class="mobile-menu__link" href="#projects" data-nav-link data-section="projects">Projects</a>
+    <a class="mobile-menu__link" href="#services" data-nav-link data-section="services">Services</a>
+    <a class="mobile-menu__link" href="#trading" data-nav-link data-section="trading">Trading</a>
+    <a class="mobile-menu__link" href="#education" data-nav-link data-section="education">Education</a>
+    <a class="mobile-menu__link" href="#about" data-nav-link data-section="about">About</a>
+    <a href="#contact" class="btn btn--warp mobile-menu__cta" data-nav-link data-section="contact">Let's Work Together</a>
+  </div>
+
+  <!-- =======================================================================
+       3. MAIN CONTENT
+       ======================================================================= -->
+  <main id="top">
+
+    <!-- HERO SECTION — "GALAXY CORE" -->
+    <section id="hero" class="section">
+      <div class="container hero-layout">
+        <div class="hero-content">
+          <div class="hero-badge">
+            <span class="hero-badge__dot"></span>
+            WELCOME TO DUKION
+          </div>
+          <h1 class="hero-title">
+            <span class="word-build">Build.</span><br />
+            <span class="word-trade">Trade.</span><br />
+            <span class="word-create">Create.</span><br />
+            <span class="word-learn">Learn.</span>
+          </h1>
+          <p class="hero-subtitle">
+            Four pillars, one ecosystem — digital products, trading tools, creative work and education, all built end to end.
+          </p>
+          <div class="hero-actions">
+            <a href="#projects" class="btn btn--warp" data-nav-link data-section="projects">
+              Explore Galactic Works
+            </a>
+            <a href="#contact" class="btn btn--secondary" data-nav-link data-section="contact">
+              Initialize Mission
+            </a>
+          </div>
+        </div>
+
+        <!-- 4 Floating Pillar Orbit Cards -->
+        <div class="hero-pillars-grid reveal-group">
+          <!-- Pillar 1: BUILD -->
+          <a href="#projects" class="pillar-card pillar-card--build reveal" data-nav-link data-section="projects">
+            <div class="pillar-card__head">
+              <div class="pillar-card__icon-box">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+                  <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+                  <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+                  <rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              </div>
+              <span class="pillar-card__num">01</span>
+            </div>
+            <div class="pillar-card__title">BUILD</div>
+            <div class="pillar-card__desc">Apps &amp; production digital products.</div>
+          </a>
+
+          <!-- Pillar 2: TRADE -->
+          <a href="#trading" class="pillar-card pillar-card--trade reveal" data-nav-link data-section="trading">
+            <div class="pillar-card__head">
+              <div class="pillar-card__icon-box">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M3 17l6-6 4 4 8-8M15 7h6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <span class="pillar-card__num">02</span>
+            </div>
+            <div class="pillar-card__title">TRADE</div>
+            <div class="pillar-card__desc">Indicators, EA &amp; algorithmic trading bots.</div>
+          </a>
+
+          <!-- Pillar 3: CREATE -->
+          <a href="#services" class="pillar-card pillar-card--create reveal" data-nav-link data-section="services">
+            <div class="pillar-card__head">
+              <div class="pillar-card__icon-box">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M4 20l4-1 10-10-3-3L5 16l-1 4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                </svg>
+              </div>
+              <span class="pillar-card__num">03</span>
+            </div>
+            <div class="pillar-card__title">CREATE</div>
+            <div class="pillar-card__desc">Design systems &amp; brand identity.</div>
+          </a>
+
+          <!-- Pillar 4: LEARN -->
+          <a href="#education" class="pillar-card pillar-card--learn reveal" data-nav-link data-section="education">
+            <div class="pillar-card__head">
+              <div class="pillar-card__icon-box">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <path d="M12 4L2 9l10 5 10-5-10-5z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+                  <path d="M6 11v5c0 1.5 2.7 3 6 3s6-1.5 6-3v-5" stroke="currentColor" stroke-width="2"/>
+                </svg>
+              </div>
+              <span class="pillar-card__num">04</span>
+            </div>
+            <div class="pillar-card__title">LEARN</div>
+            <div class="pillar-card__desc">Market structure &amp; trading courses.</div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROJECTS SECTION — "CONSTELLATION OF WORK" -->
+    <section id="projects" class="section">
+      <div class="container">
+        <div class="section-header reveal">
+          <p class="section-header__eyebrow">Constellation of Work</p>
+          <h2 class="section-header__title">Featured Projects</h2>
+          <p class="section-header__subtitle">A celestial collection of systems I've engineered, designed and deployed.</p>
+        </div>
+
+        <div class="project-filters" id="projectFilters" role="group" aria-label="Filter projects by category">
+          <button class="chip chip--selectable" data-filter="All" aria-pressed="true">All Works</button>
+          <button class="chip chip--selectable" data-filter="Apps" aria-pressed="false">Apps</button>
+          <button class="chip chip--selectable" data-filter="Trading" aria-pressed="false">Trading</button>
+          <button class="chip chip--selectable" data-filter="Design" aria-pressed="false">Design</button>
+        </div>
+
+        <div class="project-grid reveal-group" id="projectScroller" aria-live="polite">
+          <!-- Rendered dynamically from data.js via sections.js -->
+        </div>
+
+        <div class="view-all-projects-row">
+          <a href="#" class="btn btn--secondary" id="viewAllProjects">
+            View all 4+ projects →
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- SERVICES SECTION — "SIGNAL TRANSMISSION" -->
+    <section id="services" class="section">
+      <div class="container">
+        <div class="section-header reveal">
+          <p class="section-header__eyebrow">Signal Transmission</p>
+          <h2 class="section-header__title">What I fix, and how I fix it.</h2>
+          <p class="section-header__subtitle">No rigid price list — every project is scoped around what you actually need. Clear transmission from problem to solution.</p>
+        </div>
+
+        <div class="services-grid reveal-group">
+          <!-- Service 1 -->
+          <div class="signal-card reveal">
+            <span class="signal-card__ghost">01</span>
+            <div class="icon-tile">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <rect x="3" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+                <rect x="14" y="3" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+                <rect x="3" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+                <rect x="14" y="14" width="7" height="7" rx="1.5" stroke="currentColor" stroke-width="2"/>
+              </svg>
+            </div>
+            <h3 class="signal-card__title">Digital Products</h3>
+            <div class="signal-box signal-box--problem">
+              <div class="signal-label signal-label--problem">THE PROBLEM</div>
+              <p class="signal-text">You have an idea but no working app to show for it.</p>
+            </div>
+            <div class="signal-box signal-box--fix">
+              <div class="signal-label signal-label--fix">THE FIX</div>
+              <p class="signal-text">I design and build a polished, production-ready Flutter app end-to-end — from wireframe to a store-ready build.</p>
+            </div>
+            <a href="#contact" class="signal-card__cta" data-nav-link data-section="contact">
+              Get a quote <span>→</span>
+            </a>
+          </div>
+
+          <!-- Service 2 -->
+          <div class="signal-card reveal">
+            <span class="signal-card__ghost">02</span>
+            <div class="icon-tile icon-tile--cyan">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M3 17l6-6 4 4 8-8M15 7h6v6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <h3 class="signal-card__title">Trading Tools</h3>
+            <div class="signal-box signal-box--problem">
+              <div class="signal-label signal-label--problem">THE PROBLEM</div>
+              <p class="signal-text">Your strategy works on paper, but manual execution is inconsistent under pressure.</p>
+            </div>
+            <div class="signal-box signal-box--fix">
+              <div class="signal-label signal-label--fix">THE FIX</div>
+              <p class="signal-text">I build indicators and rule-based bots (Pine Script / MQL5) that read and execute your exact plan, every single time.</p>
+            </div>
+            <a href="#contact" class="signal-card__cta" data-nav-link data-section="contact">
+              Get a quote <span>→</span>
+            </a>
+          </div>
+
+          <!-- Service 3 -->
+          <div class="signal-card reveal">
+            <span class="signal-card__ghost">03</span>
+            <div class="icon-tile icon-tile--magenta">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <path d="M4 20l4-1 10-10-3-3L5 16l-1 4z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <h3 class="signal-card__title">Creative &amp; Brand</h3>
+            <div class="signal-box signal-box--problem">
+              <div class="signal-label signal-label--problem">THE PROBLEM</div>
+              <p class="signal-text">Every post and slide looks like it's from a different brand.</p>
+            </div>
+            <div class="signal-box signal-box--fix">
+              <div class="signal-label signal-label--fix">THE FIX</div>
+              <p class="signal-text">I put together a reusable identity system — logo, color, type and templates — so everything after stays on-brand.</p>
+            </div>
+            <a href="#contact" class="signal-card__cta" data-nav-link data-section="contact">
+              Get a quote <span>→</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TRADING SECTION — "NEON STAR MAP" -->
+    <section id="trading" class="section">
+      <div class="container">
+        <div class="section-header reveal">
+          <p class="section-header__eyebrow">Cosmic Constellation Data</p>
+          <h2 class="section-header__title">Trading Lab &amp; Tools</h2>
+          <p class="section-header__subtitle">Tools, indicators &amp; education for traders. Explore files, test scripts, or order custom algorithmic bots directly via WhatsApp.</p>
+        </div>
+
+        <!-- Star Map HUD Preview Card -->
+        <div class="trading-hud-card reveal">
+          <div class="trading-hud-grid">
+            <div>
+              <span class="chip chip--cyan" style="margin-bottom: var(--space-3);">REAL-TIME TELEMETRY</span>
+              <h3 style="font-family: var(--font-display); font-size: var(--text-2xl); font-weight: 800; color: #FFFFFF; margin-bottom: var(--space-3);">
+                Algorithmic Precision &amp; Market Structure
+              </h3>
+              <p style="font-size: var(--text-md); color: var(--color-text-secondary); line-height: var(--leading-relaxed); margin-bottom: var(--space-6);">
+                Liquidity sweep tracking, fair value gap identification, and rule-based execution systems engineered for precision.
+              </p>
+              <a href="https://wa.me/62882010480693?text=Halo%20DUKION%2C%20saya%20ingin%20konsultasi%20trading%20tool" target="_blank" rel="noopener" class="btn btn--whatsapp">
+                Order via WhatsApp
+              </a>
+            </div>
+
+            <div class="trading-chart-mock">
+              <div class="chart-grid-line"></div>
+              <div class="chart-grid-line"></div>
+              <div class="chart-grid-line"></div>
+              <svg class="chart-candles-svg" viewBox="0 0 300 120" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stop-color="#22D3EE" stop-opacity="0.4"/>
+                    <stop offset="100%" stop-color="#22D3EE" stop-opacity="0.0"/>
+                  </linearGradient>
+                </defs>
+                <path d="M0 90 Q 50 60, 100 75 T 180 30 T 250 45 T 300 15 L 300 120 L 0 120 Z" fill="url(#chartGrad)"/>
+                <path d="M0 90 Q 50 60, 100 75 T 180 30 T 250 45 T 300 15" fill="none" stroke="#22D3EE" stroke-width="2.5"/>
+                <!-- Liquidity markers -->
+                <circle cx="100" cy="75" r="4" fill="#FBBF24" />
+                <circle cx="180" cy="30" r="4" fill="#7C3AED" />
+                <circle cx="300" cy="15" r="4" fill="#22C55E" />
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trading Lab Grid -->
+        <div class="trading-lab-grid reveal-group" id="labGrid">
+          <!-- Rendered dynamically from data.js via sections.js -->
+        </div>
+      </div>
+    </section>
+
+    <!-- EDUCATION SECTION — "WORMHOLE PORTALS" -->
+    <section id="education" class="section">
+      <div class="container">
+        <div class="section-header reveal">
+          <p class="section-header__eyebrow">Galactic Archives</p>
+          <h2 class="section-header__title">Learn. Practice. Improve.</h2>
+          <p class="section-header__subtitle">Articles, tutorials and trading material — free to read.</p>
+        </div>
+
+        <div class="education-grid reveal-group">
+          <!-- Card 1 -->
+          <div class="edu-card reveal">
+            <div class="wormhole-ring">
+              <span style="font-size: 1.5rem;">📖</span>
+            </div>
+            <span class="chip chip--cyan" style="align-self: flex-start; margin-bottom: var(--space-3);">Article</span>
+            <h3 class="edu-card__title">Reading Market Structure Like a Trader</h3>
+            <p style="font-size: var(--text-sm); color: var(--color-text-secondary); line-height: var(--leading-normal); margin-bottom: var(--space-4);">
+              Breakdowns of higher-timeframe order flow, liquidity pools, and confirmation signals.
+            </p>
+            <div class="edu-card__meta">6 min read · Free Archive</div>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="edu-card reveal">
+            <div class="wormhole-ring">
+              <span style="font-size: 1.5rem;">⚙️</span>
+            </div>
+            <span class="chip chip--cyan" style="align-self: flex-start; margin-bottom: var(--space-3);">Tutorial</span>
+            <h3 class="edu-card__title">Building a Pine Script Indicator from Scratch</h3>
+            <p style="font-size: var(--text-sm); color: var(--color-text-secondary); line-height: var(--leading-normal); margin-bottom: var(--space-4);">
+              From syntax basics to calculating swing highs and plotting automated breakout boxes.
+            </p>
+            <div class="edu-card__meta">10 min read · Hands-on Code</div>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="edu-card reveal">
+            <div class="wormhole-ring">
+              <span style="font-size: 1.5rem;">🛡️</span>
+            </div>
+            <span class="chip chip--cyan" style="align-self: flex-start; margin-bottom: var(--space-3);">Trading Material</span>
+            <h3 class="edu-card__title">Risk Management Before Strategy</h3>
+            <p style="font-size: var(--text-sm); color: var(--color-text-secondary); line-height: var(--leading-normal); margin-bottom: var(--space-4);">
+              Position sizing, drawdown caps, and psychological stamina in volatile sessions.
+            </p>
+            <div class="edu-card__meta">5 min read · Essential Framework</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABOUT & NOW -->
+    <section id="about" class="section">
+      <div class="container about-layout">
+        <div class="reveal">
+          <p class="section-header__eyebrow">Mission Intel</p>
+          <h2 class="section-header__title">I build digital products, trading tools and creative solutions.</h2>
+          <p class="section-header__subtitle">
+            I'm fascinated by technology, financial systems, and functional aesthetics. I engineer end-to-end products built to perform reliably in production.
+          </p>
+
+          <div style="margin-top: var(--space-6); display: flex; flex-wrap: wrap; gap: var(--space-2);">
+            <span class="chip">Flutter</span>
+            <span class="chip">Dart</span>
+            <span class="chip">TradingView</span>
+            <span class="chip">Pine Script</span>
+            <span class="chip">MetaTrader 5</span>
+            <span class="chip">UI/UX Design</span>
+            <span class="chip">Three.js</span>
+            <span class="chip">Python</span>
+          </div>
+        </div>
+
+        <div class="reveal" id="now">
+          <div style="margin-bottom: var(--space-4); font-family: var(--font-display); font-size: var(--text-xs); font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; color: var(--color-gold);">
+            ORBITAL STATUS RADAR · NOW
+          </div>
+
+          <div class="radar-row">
+            <div class="radar-dot"></div>
+            <div>
+              <div style="font-weight: 700; color: #FFFFFF; font-size: var(--text-md);">Personal Finance &amp; Investment App</div>
+              <div style="font-size: var(--text-xs); color: var(--color-text-muted);">Flutter · SQLite · Riverpod · In Development</div>
+            </div>
+          </div>
+
+          <div class="radar-row">
+            <div class="radar-dot" style="background: var(--color-violet); box-shadow: 0 0 10px var(--color-violet);"></div>
+            <div>
+              <div style="font-weight: 700; color: #FFFFFF; font-size: var(--text-md);">Trading Signal Indicator V2</div>
+              <div style="font-size: var(--text-xs); color: var(--color-text-muted);">Pine Script · Real-time Telemetry · Testing</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- CONTACT SECTION -->
+    <section id="contact" class="section">
+      <div class="container">
+        <div class="section-header section-header--center reveal">
+          <p class="section-header__eyebrow">Transmission Uplink</p>
+          <h2 class="section-header__title">Have a project in mind?</h2>
+          <p class="section-header__subtitle">Fill in a few mission parameters and I'll open a direct WhatsApp chat with everything formatted — instant and direct.</p>
+        </div>
+
+        <form class="contact-card reveal" id="contactForm" novalidate>
+          <div class="form-group">
+            <label class="form-label" id="needLabel" for="needGroup">
+              What do you need?
+              <span class="form-required-tag" id="needRequiredTag" hidden>Required</span>
+            </label>
+            <div class="filter-row" id="needGroup" role="group" aria-label="What do you need" style="display: flex; flex-wrap: wrap; gap: var(--space-2);">
+              <button type="button" class="chip chip--selectable" data-value="Design" aria-pressed="false">Design</button>
+              <button type="button" class="chip chip--selectable" data-value="Summary" aria-pressed="false">Summary</button>
+              <button type="button" class="chip chip--selectable" data-value="Website / App" aria-pressed="false">Website / App</button>
+              <button type="button" class="chip chip--selectable" data-value="Trading Indicator" aria-pressed="false">Trading Indicator</button>
+              <button type="button" class="chip chip--selectable" data-value="EA / Bot" aria-pressed="false">EA / Bot</button>
+              <button type="button" class="chip chip--selectable" data-value="Other" aria-pressed="false">Other</button>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="descriptionInput">Tell me about your project</label>
+            <textarea class="form-textarea" id="descriptionInput" placeholder="What are you trying to achieve? (optional)"></textarea>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label" for="budgetGroup">Budget Estimate</label>
+            <div class="filter-row" id="budgetGroup" role="group" aria-label="Budget range" style="display: flex; flex-wrap: wrap; gap: var(--space-2);">
+              <button type="button" class="chip chip--selectable" data-value="&lt; Rp500K" aria-pressed="false">&lt; Rp500K</button>
+              <button type="button" class="chip chip--selectable" data-value="Rp500K – 2M" aria-pressed="false">Rp500K – 2M</button>
+              <button type="button" class="chip chip--selectable" data-value="Rp2M – 5M" aria-pressed="false">Rp2M – 5M</button>
+              <button type="button" class="chip chip--selectable" data-value="&gt; Rp5M" aria-pressed="false">&gt; Rp5M</button>
+            </div>
+          </div>
+
+          <div class="form-submit-row">
+            <button type="submit" class="btn btn--whatsapp" id="contactSubmit">Order via WhatsApp</button>
+          </div>
+          <div class="form-feedback" id="formFeedback" role="status" aria-live="polite"></div>
+        </form>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- =======================================================================
+       4. FOOTER (Galactic Perimeter)
+       ======================================================================= -->
+  <footer id="footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <div class="footer-brand">DUKION</div>
+          <p class="footer-tagline">
+            Four pillars, one ecosystem — Digital Projects, Trading Tools, Creative Services, and Trader Education.
+          </p>
+        </div>
+
+        <div>
+          <div class="footer-heading">Navigation</div>
+          <div class="footer-links">
+            <a class="footer-link" href="#projects" data-nav-link data-section="projects">Projects</a>
+            <a class="footer-link" href="#services" data-nav-link data-section="services">Services</a>
+            <a class="footer-link" href="#trading" data-nav-link data-section="trading">Trading Lab</a>
+            <a class="footer-link" href="#education" data-nav-link data-section="education">Education</a>
+            <a class="footer-link" href="#about" data-nav-link data-section="about">About</a>
+          </div>
+        </div>
+
+        <div>
+          <div class="footer-heading">Ecosystem</div>
+          <div class="footer-links">
+            <span class="footer-link" style="cursor: default; opacity: 0.85;">Build · Apps &amp; Web</span>
+            <span class="footer-link" style="cursor: default; opacity: 0.85;">Trade · Pine &amp; MQL5</span>
+            <span class="footer-link" style="cursor: default; opacity: 0.85;">Create · Brand Systems</span>
+            <span class="footer-link" style="cursor: default; opacity: 0.85;">Learn · Strategy Academy</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <span>© 2026 DUKION · All rights reserved.</span>
+        <span>Crafted for high performance &amp; deep space aesthetic.</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Three.js (WebGL 3D Engine from pinned cdnjs release) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+
+  <!-- Main ES Module Application -->
+  <script type="module" src="js/main.js"></script>
+
+</body>
+</html>
