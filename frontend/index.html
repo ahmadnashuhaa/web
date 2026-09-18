@@ -5,23 +5,36 @@
   <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-  <title>DUKION — Build. Trade. Create. Learn.</title>
+  <title>dukion profile &amp; Brand Studio</title>
   <meta name="description" content="DUKION — Deep-space digital studio. Four pillars, one ecosystem: digital products, trading tools, creative design, and trader education." />
+  <meta name="keywords" content="dukion, digital product studio, trading indicator, Pine Script developer, MQL5 EA developer, Flutter app developer, brand identity design, trader education" />
+  <meta name="author" content="DUKION" />
+  <meta name="robots" content="index, follow" />
+  <meta name="googlebot" content="index, follow" />
+  <meta name="theme-color" content="#0B0F1A" />
+
+  <!-- Canonical -->
+  <link rel="canonical" href="https://dukion.vercel.app/" />
 
   <!-- Open Graph -->
   <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="DUKION" />
+  <meta property="og:locale" content="id_ID" />
   <meta property="og:title" content="DUKION — Build. Trade. Create. Learn." />
   <meta property="og:description" content="Four pillars, one ecosystem: digital products, trading tools, creative design, and education." />
   <meta property="og:url" content="https://dukion.vercel.app/" />
-  <meta property="og:image" content="icons/Icon-512.png" />
+  <meta property="og:image" content="https://dukion.vercel.app/icons/Icon-512.png" />
+  <meta property="og:image:width" content="512" />
+  <meta property="og:image:height" content="512" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="DUKION — Build. Trade. Create. Learn." />
   <meta name="twitter:description" content="Four pillars, one ecosystem: digital products, trading tools, creative design, and education." />
-  <meta name="twitter:image" content="icons/Icon-512.png" />
+  <meta name="twitter:image" content="https://dukion.vercel.app/icons/Icon-512.png" />
 
   <link rel="icon" type="image/png" href="favicon.png" />
+  <link rel="apple-touch-icon" href="icons/Icon-512.png" />
 
   <!-- Google Fonts: Space Grotesk (Futuristic headings) + Inter (Crisp body) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -34,6 +47,37 @@
   <link rel="stylesheet" href="css/components.css" />
   <link rel="stylesheet" href="css/sections.css" />
   <link rel="stylesheet" href="css/style.css" />
+
+  <!-- Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ProfessionalService",
+    "name": "DUKION",
+    "url": "https://dukion.vercel.app/",
+    "image": "https://dukion.vercel.app/icons/Icon-512.png",
+    "description": "DUKION adalah studio digital yang mengerjakan produk digital (app), trading tools (indicator & EA), desain brand, dan edukasi trading.",
+    "areaServed": "ID",
+    "priceRange": "Rp500K - Rp5M+",
+    "sameAs": [
+      "https://wa.me/62882010480693"
+    ],
+    "makesOffer": [
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Digital Product Development", "description": "Pengembangan aplikasi Flutter end-to-end dari wireframe hingga rilis." } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Trading Tools Development", "description": "Pembuatan indicator dan EA/bot trading berbasis Pine Script dan MQL5." } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Creative & Brand Identity", "description": "Sistem identitas merek: logo, warna, tipografi, dan template." } },
+      { "@type": "Offer", "itemOffered": { "@type": "Service", "name": "Trader Education", "description": "Artikel, tutorial, dan materi trading gratis." } }
+    ]
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "DUKION",
+    "url": "https://dukion.vercel.app/"
+  }
+  </script>
 </head>
 <body>
 
@@ -107,17 +151,15 @@
             WELCOME TO DUKION
           </div>
           <h1 class="hero-title">
-            <span class="word-build">Build.</span><br />
-            <span class="word-trade">Trade.</span><br />
-            <span class="word-create">Create.</span><br />
-            <span class="word-learn">Learn.</span>
+            <span class="word-dukion">dukion.</span><br />
+            <span class="word-profile">profile.</span><br />
           </h1>
           <p class="hero-subtitle">
-            Four pillars, one ecosystem — digital products, trading tools, creative work and education, all built end to end.
+            Four pillars, one ecosystem digital products, trading tools, creative work and education, all built end to end.
           </p>
           <div class="hero-actions">
             <a href="#projects" class="btn btn--warp" data-nav-link data-section="projects">
-              Explore Galactic Works
+              Explore the project
             </a>
             <a href="#contact" class="btn btn--secondary" data-nav-link data-section="contact">
               Initialize Mission
@@ -485,10 +527,10 @@
           <div class="form-group">
             <label class="form-label" for="budgetGroup">Budget Estimate</label>
             <div class="filter-row" id="budgetGroup" role="group" aria-label="Budget range" style="display: flex; flex-wrap: wrap; gap: var(--space-2);">
-              <button type="button" class="chip chip--selectable" data-value="&lt; Rp500K" aria-pressed="false">&lt; Rp500K</button>
-              <button type="button" class="chip chip--selectable" data-value="Rp500K – 2M" aria-pressed="false">Rp500K – 2M</button>
-              <button type="button" class="chip chip--selectable" data-value="Rp2M – 5M" aria-pressed="false">Rp2M – 5M</button>
-              <button type="button" class="chip chip--selectable" data-value="&gt; Rp5M" aria-pressed="false">&gt; Rp5M</button>
+              <button type="button" class="chip chip--selectable" data-value="&lt; Rp100K" aria-pressed="false">&lt; Rp100K</button>
+              <button type="button" class="chip chip--selectable" data-value="Rp100K – 500K" aria-pressed="false">Rp100K – 500K</button>
+              <button type="button" class="chip chip--selectable" data-value="Rp500K – 1M" aria-pressed="false">Rp500K – 1M</button>
+              <button type="button" class="chip chip--selectable" data-value="&gt; Rp1M" aria-pressed="false">&gt; Rp1M</button>
             </div>
           </div>
 

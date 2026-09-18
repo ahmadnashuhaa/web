@@ -753,3 +753,171 @@
   display: flex;
   justify-content: flex-end;
 }
+
+/* ==========================================================================
+   8. PROJECT & LAB DETAIL PAGES
+   Used by project-detail.html (js/project-detail.js) and
+   lab-detail.html (js/lab-detail.js). Both scripts render into a plain
+   #projectContent / #labContent container inside .detail-page — this
+   section is the only styling layer for that injected markup.
+   ========================================================================== */
+.detail-page {
+  position: relative;
+  min-height: 100vh;
+  padding-block: calc(var(--nav-height) + var(--space-8)) var(--space-24);
+}
+
+.detail-page .container {
+  max-width: 820px;
+}
+
+.detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  margin-bottom: var(--space-8);
+  transition: color var(--duration-fast) var(--ease-standard);
+}
+
+.detail-back:hover {
+  color: var(--color-cyan);
+}
+
+.detail-back svg {
+  flex-shrink: 0;
+}
+
+.detail-header {
+  margin-bottom: var(--space-8);
+}
+
+.detail-title {
+  font-family: var(--font-display);
+  font-size: var(--text-3xl);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: var(--leading-tight);
+  color: var(--color-text);
+  margin-top: var(--space-4);
+}
+
+.detail-tagline {
+  margin-top: var(--space-3);
+  max-width: 640px;
+  font-size: var(--text-lg);
+  line-height: var(--leading-relaxed);
+  color: var(--color-text-secondary);
+}
+
+.detail-techstack {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-top: var(--space-5);
+}
+
+.detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-6);
+}
+
+.detail-hero-image {
+  margin-block: var(--space-10);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+  box-shadow: var(--shadow-card);
+}
+
+.detail-hero-image img {
+  display: block;
+  width: 100%;
+  max-height: 460px;
+  object-fit: cover;
+}
+
+.detail-section {
+  margin-bottom: var(--space-10);
+}
+
+.detail-section__label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  margin-bottom: var(--space-3);
+}
+
+.detail-section__label::before {
+  content: '';
+  display: inline-block;
+  width: 14px;
+  height: 2px;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.detail-section__body {
+  max-width: 720px;
+  font-size: var(--text-md);
+  line-height: var(--leading-relaxed);
+  color: var(--color-text-secondary);
+}
+
+.detail-highlights {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: var(--space-3);
+}
+
+@media (min-width: 640px) {
+  .detail-highlights {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.detail-highlight {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+.detail-cta-box {
+  margin-top: var(--space-12);
+}
+
+.detail-cta-box__title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  font-weight: 800;
+  color: var(--color-text);
+  margin-bottom: var(--space-2);
+}
+
+.detail-cta-box__text {
+  max-width: 480px;
+  margin-bottom: var(--space-5);
+  color: var(--color-text-secondary);
+}
+
+@media (max-width: 639px) {
+  .detail-title {
+    font-size: var(--text-2xl);
+  }
+}

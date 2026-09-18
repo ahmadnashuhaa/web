@@ -40,6 +40,16 @@ const item = LAB_ITEMS.find((i) => i.slug === slug);
 const content = document.getElementById('labContent');
 
 if (!item) {
+  document.title = 'Item Not Found — Dukion';
+  document.getElementById('pageTitle').textContent = 'Item Not Found — Dukion';
+  let robotsTag = document.querySelector('meta[name="robots"]');
+  if (!robotsTag) {
+    robotsTag = document.createElement('meta');
+    robotsTag.setAttribute('name', 'robots');
+    document.head.appendChild(robotsTag);
+  }
+  robotsTag.setAttribute('content', 'noindex, nofollow');
+
   content.innerHTML = `
     <div class="detail-header">
       <h1 class="detail-title">Item not found</h1>
@@ -47,8 +57,19 @@ if (!item) {
       <a href="index.html#trading" class="btn btn--primary" style="margin-top: var(--space-6);">Back to Trading Lab</a>
     </div>`;
 } else {
-  document.title = `${item.title} — Dukion`;
-  document.getElementById('pageTitle').textContent = `${item.title} — Dukion`;
+  const pageTitle = `${item.title} — Dukion | ${item.category}`;
+  const pageDesc = item.description;
+  const canonicalUrl = `https://dukion.vercel.app/lab-detail.html?slug=${item.slug}`;
+
+  document.title = pageTitle;
+  document.getElementById('pageTitle').textContent = pageTitle;
+  document.getElementById('pageDescription')?.setAttribute('content', pageDesc);
+  document.getElementById('pageCanonical')?.setAttribute('href', canonicalUrl);
+  document.getElementById('pageOgTitle')?.setAttribute('content', pageTitle);
+  document.getElementById('pageOgDescription')?.setAttribute('content', pageDesc);
+  document.getElementById('pageOgUrl')?.setAttribute('content', canonicalUrl);
+  document.getElementById('pageTwTitle')?.setAttribute('content', pageTitle);
+  document.getElementById('pageTwDescription')?.setAttribute('content', pageDesc);
 
   const whatsappUrl = buildWhatsAppUrl({ projectTitle: item.title });
 

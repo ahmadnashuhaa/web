@@ -13,6 +13,16 @@ const project = PROJECTS.find((p) => p.slug === slug);
 const content = document.getElementById('projectContent');
 
 if (!project) {
+  document.title = 'Project Not Found — Dukion';
+  document.getElementById('pageTitle').textContent = 'Project Not Found — Dukion';
+  let robotsTag = document.querySelector('meta[name="robots"]');
+  if (!robotsTag) {
+    robotsTag = document.createElement('meta');
+    robotsTag.setAttribute('name', 'robots');
+    document.head.appendChild(robotsTag);
+  }
+  robotsTag.setAttribute('content', 'noindex, nofollow');
+
   content.innerHTML = `
     <div class="detail-header">
       <h1 class="detail-title">Project not found</h1>
@@ -20,8 +30,19 @@ if (!project) {
       <a href="index.html#projects" class="btn btn--primary" style="margin-top: var(--space-6);">Back to Projects</a>
     </div>`;
 } else {
-  document.title = `${project.title} — Dukion`;
-  document.getElementById('pageTitle').textContent = `${project.title} — Dukion`;
+  const pageTitle = `${project.title} — Dukion | ${project.category}`;
+  const pageDesc = project.tagline;
+  const canonicalUrl = `https://dukion.vercel.app/project-detail.html?slug=${project.slug}`;
+
+  document.title = pageTitle;
+  document.getElementById('pageTitle').textContent = pageTitle;
+  document.getElementById('pageDescription')?.setAttribute('content', pageDesc);
+  document.getElementById('pageCanonical')?.setAttribute('href', canonicalUrl);
+  document.getElementById('pageOgTitle')?.setAttribute('content', pageTitle);
+  document.getElementById('pageOgDescription')?.setAttribute('content', pageDesc);
+  document.getElementById('pageOgUrl')?.setAttribute('content', canonicalUrl);
+  document.getElementById('pageTwTitle')?.setAttribute('content', pageTitle);
+  document.getElementById('pageTwDescription')?.setAttribute('content', pageDesc);
 
   const whatsappUrl = buildWhatsAppUrl({ projectTitle: project.title });
 
@@ -51,10 +72,6 @@ if (!project) {
     <div class="detail-section" style="color: ${project.color};">
       <div class="detail-section__label">Solution</div>
       <p class="detail-section__body">${escapeHtml(project.solution)}</p>
-    </div>
-
-    <div class="detail-hero-image">
-      <img src="${project.imageUrl}" alt="${escapeHtml(project.title)} detail" />
     </div>
 
     <div class="detail-section" style="color: ${project.color};">

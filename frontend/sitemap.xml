@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://dukion.vercel.app/</loc>
+    <changefreq>weekly</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  <!-- Projects (from data.js -> PROJECTS) -->
+  <url>
+    <loc>https://dukion.vercel.app/project-detail.html?slug=personal-finance-app</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://dukion.vercel.app/project-detail.html?slug=trading-signal-indicator</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://dukion.vercel.app/project-detail.html?slug=trading-ea-bot</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://dukion.vercel.app/project-detail.html?slug=brand-identity-set</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+
+  <!-- Trading Lab items (from data.js -> LAB_ITEMS) -->
+  <url>
+    <loc>https://dukion.vercel.app/lab-detail.html?slug=structure-liquidity-indicator</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://dukion.vercel.app/lab-detail.html?slug=trend-momentum-ea</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://dukion.vercel.app/lab-detail.html?slug=trading-from-zero</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+</urlset>
