@@ -171,7 +171,7 @@ function shorten(s, n) {
 
 function renderProductMessage(o) {
   const {
-    mode, // 'new' | 'update'
+    mode, // 'new' | 'forward' | 'update'
     info,
     photoMsgIds = [],
     freshPhotoCount = 0,
@@ -182,11 +182,16 @@ function renderProductMessage(o) {
   } = o;
 
   const slug = slugify(info.name);
-  const photoCount = mode === 'new' ? (postHasPhoto ? 1 : 0) : photoMsgIds.length;
+  const photoCount = mode === 'update' ? photoMsgIds.length : (postHasPhoto ? 1 : 0);
   const files = Array.from({ length: photoCount }, (_, i) => `${slug}-${i + 1}.jpg`);
 
   const L = [];
-  L.push(mode === 'new' ? '🆕 <b>Post produk baru terdeteksi</b>' : '📸 <b>Update foto/komentar untuk sebuah produk</b>');
+  const HEADERS = {
+    new: '🆕 <b>Post produk baru terdeteksi</b>',
+    forward: '📥 <b>Draft dari pesan yang Anda teruskan</b>',
+    update: '📸 <b>Update foto/komentar untuk sebuah produk</b>',
+  };
+  L.push(HEADERS[mode] || HEADERS.update);
   L.push('');
   L.push(`📌 Nama (tebakan): <b>${esc(nameKnown && info.name ? info.name : '(tidak terbaca — buka thread-nya di Telegram)')}</b>`);
   L.push(`🏷️ Kategori (tebakan): ${info.category ? esc(info.category) : 'belum yakin → isi manual'}`);
@@ -202,7 +207,13 @@ function renderProductMessage(o) {
   if (info.variants) L.push(`🎨 Warna terdeteksi: ${esc(info.variants.join(', '))}`);
 
   L.push('');
-  if (mode === 'new') {
+  if (mode === 'forward') {
+    L.push(
+      postHasPhoto
+        ? '📷 Pesan ini berisi foto. Simpan sendiri fotonya dari Telegram ke folder <code>images/</code>, lalu sesuaikan nama file di draft.'
+        : '📷 Foto tidak dihitung otomatis pada mode teruskan. Simpan sendiri foto produk dari Telegram ke folder <code>images/</code>, lalu isi nama file di draft.'
+    );
+  } else if (mode === 'new') {
     L.push(
       postHasPhoto
         ? '📷 Post ini sendiri berisi foto (cek di Telegram).'

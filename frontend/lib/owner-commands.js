@@ -6,6 +6,7 @@
 const config = require('./config');
 const store = require('./store');
 const { esc } = require('./telegram-utils');
+const { analyze, renderProductMessage } = require('./product-draft');
 const { broadcastText, buildReport } = require('./broadcast');
 
 const isOwner = (ctx) => Boolean(config.ownerId) && ctx.from && String(ctx.from.id) === config.ownerId;
@@ -16,6 +17,7 @@ const HELP = [
   'Perintah (khusus pemilik):',
   '/broadcast &lt;pesan&gt; — kirim pesan teks ke semua channel/grup tujuan',
   '/id — lihat chat_id (ketik di grup, atau teruskan pesan channel ke sini)',
+  '📥 Teruskan (forward) sebuah post produk ke chat ini → bot membuatkan draft kodenya',
   '/status — cek pengaturan bot',
   '',
   'Notifikasi produk baru dikirim otomatis ke chat ini.',
@@ -78,12 +80,31 @@ function registerOwnerCommands(bot) {
     return ctx.reply(buildReport(result));
   });
 
-  // Owner meneruskan (forward) pesan dari channel/grup ke bot -> bot menjawab chat_id-nya.
+  // Owner meneruskan (forward) pesan ke bot:
+  //  - kalau pesannya ada teks/keterangan  -> bot membuat DRAFT produk (cara manual, tanpa jadi admin grup)
+  //  - selalu memberi tahu chat_id sumbernya kalau terbaca
   bot.on('message', async (ctx, next) => {
     if (ctx.chat.type === 'private' && isOwner(ctx)) {
       const fo = ctx.message.forward_origin;
       if (fo) {
         const src = fo.chat || fo.sender_chat || null;
+        const text = ctx.message.text || ctx.message.caption || '';
+
+        if (text) {
+          const info = analyze({ rootText: text });
+          await ctx.reply(
+            renderProductMessage({ mode: 'forward', info, postHasPhoto: Boolean(ctx.message.photo) }),
+            { parse_mode: 'HTML', link_preview_options: { is_disabled: true } }
+          );
+          if (src) {
+            await ctx.reply(
+              `ℹ️ Sumber pesan: <b>${esc(src.title || src.username || 'chat')}</b>\nchat_id: <code>${src.id}</code>`,
+              { parse_mode: 'HTML' }
+            );
+          }
+          return;
+        }
+
         if (src) {
           return ctx.reply(
             `📍 Pesan ini berasal dari: <b>${esc(src.title || src.username || 'chat')}</b>\nchat_id: <code>${src.id}</code>`,
