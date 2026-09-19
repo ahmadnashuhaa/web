@@ -1,7 +1,7 @@
 /**
  * galaxy-engine.js
  *
- * DUKION Galaxy Engine — 3D Celestial System built with Three.js.
+ * DUKION Galaxy Engine 3D Celestial System built with Three.js.
  *
  * Responsibilities:
  * 1. Global multi-layer celestial starfield (distant slow stars + near twinkling stars + comets).
@@ -217,7 +217,7 @@ export function initGalaxyEngine() {
   planetTexture.wrapS = THREE.RepeatWrapping;
   planetTexture.wrapT = THREE.ClampToEdgeWrapping;
 
-  // B. Planet Mesh (Matte diffuse planetary body — NO sharp white specular highlight!)
+  // B. Planet Mesh (Matte diffuse planetary body NO sharp white specular highlight!)
   const planetGeom = new THREE.SphereGeometry(1.35, isLowEnd ? 28 : 40, isLowEnd ? 28 : 40);
   const planetMat = new THREE.MeshStandardMaterial({
     map: planetTexture,

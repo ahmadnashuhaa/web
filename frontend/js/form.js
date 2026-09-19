@@ -5,7 +5,7 @@
  *  - selecting a need clears the error state
  *  - submit builds a WhatsApp deep link via buildWhatsAppUrl (same shape
  *    as launch_helper.dart's openWhatsAppOrder)
- * Also posts to /api/contact for server-side record-keeping — the
+ * Also posts to /api/contact for server-side record-keeping the
  * Flutter version had no backend, so this is additive, not a behavior
  * change; WhatsApp still opens even if the request fails.
  */
@@ -92,9 +92,9 @@ export function initContactForm() {
         body: JSON.stringify(payload),
       });
       if (!res.ok) throw new Error('Request failed');
-      showFeedback('success', "Got it — opening WhatsApp with your details prefilled.");
+      showFeedback('success', "Got it opening WhatsApp with your details prefilled.");
     } catch (err) {
-      // Backend not reachable (e.g. running via Live Server without Flask) —
+      // Backend not reachable (e.g. running via Live Server without Flask)
       // don't block the user, WhatsApp is the actual point of contact.
       console.warn('[Dukion] /api/contact request failed, continuing to WhatsApp anyway.', err);
     } finally {

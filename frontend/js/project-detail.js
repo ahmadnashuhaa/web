@@ -13,8 +13,8 @@ const project = PROJECTS.find((p) => p.slug === slug);
 const content = document.getElementById('projectContent');
 
 if (!project) {
-  document.title = 'Project Not Found — Dukion';
-  document.getElementById('pageTitle').textContent = 'Project Not Found — Dukion';
+  document.title = 'Project Not Found Dukion';
+  document.getElementById('pageTitle').textContent = 'Project Not Found Dukion';
   let robotsTag = document.querySelector('meta[name="robots"]');
   if (!robotsTag) {
     robotsTag = document.createElement('meta');
@@ -30,7 +30,7 @@ if (!project) {
       <a href="index.html#projects" class="btn btn--primary" style="margin-top: var(--space-6);">Back to Projects</a>
     </div>`;
 } else {
-  const pageTitle = `${project.title} — Dukion | ${project.category}`;
+  const pageTitle = `${project.title} Dukion | ${project.category}`;
   const pageDesc = project.tagline;
   const canonicalUrl = `https://dukion.vercel.app/project-detail.html?slug=${project.slug}`;
 
@@ -88,7 +88,7 @@ if (!project) {
 
     <div class="card detail-cta-box">
       <div class="detail-cta-box__title">Want something like this?</div>
-      <p class="detail-cta-box__text">Tell me what you're building — I'll get back to you with an estimate.</p>
+      <p class="detail-cta-box__text">Tell me what you're building I'll get back to you with an estimate.</p>
       <a class="btn btn--primary" style="background:${project.color};" href="${whatsappUrl}" target="_blank" rel="noopener">Order via WhatsApp</a>
     </div>
   `;

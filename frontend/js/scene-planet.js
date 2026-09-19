@@ -1,7 +1,7 @@
 /**
  * scene-planet.js
  *
- * Dukion Hero 3D Scene — "Planet Orbiting a Star"
+ * Dukion Hero 3D Scene "Planet Orbiting a Star"
  * Built with Three.js (WebGL).
  *
  * Core Concept:
@@ -17,7 +17,7 @@
 import { PROJECTS, LAB_ITEMS } from './data.js';
 
 /* ==========================================================================
-   TUNING CONSTANTS — adjust these values freely to tweak scene aesthetics
+   TUNING CONSTANTS adjust these values freely to tweak scene aesthetics
    ========================================================================== */
 export const SCENE_CONFIG = {
   // ---- Orbit Geometry ----

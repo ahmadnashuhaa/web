@@ -21,7 +21,7 @@ function escapeHtml(str) {
 }
 
 /** filled buttons use the item's accent as solid background; outlined
- *  buttons just show a border — same visual language as _ActionButton
+ *  buttons just show a border same visual language as _ActionButton
  *  in lab_item_detail_page.dart. */
 function actionButton({ href, label, iconName, color, filled }) {
   const style = filled
@@ -40,8 +40,8 @@ const item = LAB_ITEMS.find((i) => i.slug === slug);
 const content = document.getElementById('labContent');
 
 if (!item) {
-  document.title = 'Item Not Found — Dukion';
-  document.getElementById('pageTitle').textContent = 'Item Not Found — Dukion';
+  document.title = 'Item Not Found Dukion';
+  document.getElementById('pageTitle').textContent = 'Item Not Found Dukion';
   let robotsTag = document.querySelector('meta[name="robots"]');
   if (!robotsTag) {
     robotsTag = document.createElement('meta');
@@ -57,7 +57,7 @@ if (!item) {
       <a href="index.html#trading" class="btn btn--primary" style="margin-top: var(--space-6);">Back to Trading Lab</a>
     </div>`;
 } else {
-  const pageTitle = `${item.title} — Dukion | ${item.category}`;
+  const pageTitle = `${item.title} Dukion | ${item.category}`;
   const pageDesc = item.description;
   const canonicalUrl = `https://dukion.vercel.app/lab-detail.html?slug=${item.slug}`;
 

@@ -205,12 +205,12 @@ export function initAnimations() {
 
   // ---- Per-frame update (ports the 4 ValueListenableBuilder layers) ----
   function applyFrame() {
-    // Layer 1: content fade/slide — rangeToUnit(progress, 0.78, 1.0)
+    // Layer 1: content fade/slide rangeToUnit(progress, 0.78, 1.0)
     const contentT = rangeToUnit(progress, 0.78, 1.0);
     contentWrapper.style.opacity = String(contentT);
     contentWrapper.style.transform = `translateY(${(1 - contentT) * 32}px)`;
 
-    // Layer 2: overlay fade/scale — rangeToUnit(progress, 0.72, 0.97)
+    // Layer 2: overlay fade/scale rangeToUnit(progress, 0.72, 0.97)
     const fadeOut = rangeToUnit(progress, 0.72, 0.97);
     const overlayOpacity = 1 - fadeOut;
     if (overlayOpacity <= 0) {
@@ -231,14 +231,14 @@ export function initAnimations() {
     }
     applyCircleClip();
 
-    // Layer 3: hero text — separate fade rates per element, ported exactly
+    // Layer 3: hero text separate fade rates per element, ported exactly
     heroText.style.opacity = String(clamp(1 - progress * 1.6, 0, 1));
     heroText.style.pointerEvents = progress > 0.03 ? 'none' : 'auto';
     heroTitle.style.opacity = String(clamp(1 - progress * 2, 0, 1));
     heroSubtitle.style.opacity = String(clamp(0.7 - progress * 2, 0, 0.7) / 0.7);
     heroActions.style.opacity = String(clamp(1 - progress * 3, 0, 1));
 
-    // Scroll hint — visible only right at the top
+    // Scroll hint visible only right at the top
     scrollHint.style.opacity = progress >= 0.05 ? '0' : '1';
     scrollHint.style.pointerEvents = progress >= 0.05 ? 'none' : 'auto';
   }

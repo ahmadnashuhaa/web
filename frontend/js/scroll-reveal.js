@@ -3,7 +3,7 @@
  * Adopts the scroll-triggered reveal pattern from the Finpay reference:
  * section headers and cards fade + lift in as they cross into view,
  * instead of all being visible immediately on load. Kept subtle and
- * fast (see --duration-slow) rather than a dramatic entrance — per the
+ * fast (see --duration-slow) rather than a dramatic entrance per the
  * "less but better" direction, this is a polish detail, not a feature.
  *
  * Usage: add class="reveal" to any element. Elements inside a

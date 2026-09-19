@@ -18,7 +18,7 @@ export const PROJECTS = [
       'without juggling a spreadsheet and three different apps?',
     solution:
       'A single Flutter app that combines expense tracking, income logging ' +
-      'and an investment portfolio view — all stored locally with SQLite ' +
+      'and an investment portfolio view all stored locally with SQLite ' +
       'and kept reactive through Riverpod, so the numbers update instantly ' +
       'as new transactions come in.',
     features: [
@@ -63,7 +63,7 @@ export const PROJECTS = [
     techStack: ['MetaTrader', 'MQL5'],
     problem:
       'A profitable, backtested strategy is only useful if it is executed ' +
-      'exactly the same way every single time — something manual trading ' +
+      'exactly the same way every single time something manual trading ' +
       'struggles with under pressure.',
     solution:
       "An Expert Advisor that executes the strategy's entry, stop-loss " +
@@ -86,7 +86,7 @@ export const PROJECTS = [
     color: 'var(--color-primary)',
     techStack: ['Figma', 'Illustrator'],
     problem:
-      'The client had a product but no consistent visual identity — every ' +
+      'The client had a product but no consistent visual identity every ' +
       'post and slide looked like it came from a different brand.',
     solution:
       'A complete identity system: logo, color palette, type pairing and a ' +
@@ -149,12 +149,12 @@ export const LAB_ITEMS = [
   {
     slug: 'trading-from-zero',
     title: 'Trading From Zero',
-    subtitle: 'A structured course — market to strategy',
+    subtitle: 'A structured course market to strategy',
     icon: 'book-open',
     category: 'Course',
     color: 'var(--color-primary)',
     description:
-      'Learn the market, build your strategy, and trade with a plan — a ' +
+      'Learn the market, build your strategy, and trade with a plan a ' +
       'six-module course that goes from market structure fundamentals all ' +
       'the way to backtesting and live analysis.',
     highlights: [
@@ -173,7 +173,7 @@ export const LAB_ITEMS = [
 export const WHATSAPP_NUMBER = '62882010480693';
 
 /**
- * Ports openWhatsAppOrder from launch_helper.dart — builds the same
+ * Ports openWhatsAppOrder from launch_helper.dart builds the same
  * prefilled message shape from whichever pieces are provided.
  */
 export function buildWhatsAppUrl({ projectTitle, need, budget, description } = {}) {
