@@ -1,0 +1,9 @@
+{
+  "name": "dukion-telegram-bot",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Bot Telegram Dukion Shop: notifikasi draft produk baru + broadcast (Vercel Serverless, webhook)",
+  "dependencies": {
+    "grammy": "^1.30.0"
+  }
+}
