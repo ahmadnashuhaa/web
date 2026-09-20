@@ -55,7 +55,7 @@ function buildReport({ ok, failed, total }) {
   }
   if (failed.length) {
     L.push('', '❌ Gagal:');
-    failed.forEach((f) => L.push(`• ${f.id} — ${f.reason}`));
+    failed.forEach((f) => L.push(`• ${f.id} → ${f.reason}`));
   }
   return L.join('\n');
 }

@@ -25,10 +25,10 @@ const MENU = [
   '📋 <b>Menu Dukion Bot</b>',
   '',
   '📦 <b>Product</b>',
-  '/product analyze — pisahkan produk / varian / atribut',
+  '/product analyze → pisahkan produk / varian / atribut',
   '/product validate · import · export [json|csv|xlsx]',
   '',
-  '📁 <b>File</b> (kirim file dulu, lalu perintah — atau balas file-nya)',
+  '📁 <b>File</b> (kirim file dulu, lalu perintah → atau balas file-nya)',
   '/file extract · search · compare · list',
   '/file convert · merge · split · rename · compress · merge-text',
   '/file summarize · paraphrase · clean · translate',
@@ -56,20 +56,20 @@ const MENU = [
 const GROUP_HELP = {
   product: [
     '📦 <b>/product</b>',
-    '/product analyze &lt;teks&gt; — analisis (atau balas teks/file)',
-    '/product validate — periksa duplikat, varian salah tempat, data kosong',
-    '/product import — impor dari file csv/xlsx/json (baris bernama sama = varian)',
-    '/product export [json|csv|xlsx] — kirim hasil terakhir sebagai file',
+    '/product analyze &lt;teks&gt; → analisis (atau balas teks/file)',
+    '/product validate → periksa duplikat, varian salah tempat, data kosong',
+    '/product import → impor dari file csv/xlsx/json (baris bernama sama = varian)',
+    '/product export [json|csv|xlsx] → kirim hasil terakhir sebagai file',
     'Contoh input: "Kaos Oversize", lalu baris warna/ukuran di bawahnya. Pisahkan produk dengan baris kosong.',
   ],
   file: [
-    '📁 <b>/file</b> — kirim file lebih dulu (atau balas file), lalu:',
-    '/file extract — ambil teks (gratis; gambar/scan memakai AI)',
+    '📁 <b>/file</b> → kirim file lebih dulu (atau balas file), lalu:',
+    '/file extract → ambil teks (gratis; gambar/scan memakai AI)',
     '/file search &lt;kata&gt; · /file compare · /file list',
-    '/file convert &lt;format&gt; — pdf, docx, txt, md, csv, xlsx, json',
+    '/file convert &lt;format&gt; → pdf, docx, txt, md, csv, xlsx, json',
     '/file merge [nomor…|all] [teks sampul] · /file split &lt;1-3,5 | each | per 5&gt;',
     '/file rename &lt;nama&gt; · /file compress [all] · /file merge-text &lt;teks&gt; (awalan "akhir:" = di akhir)',
-    '/file summarize · paraphrase · clean · translate &lt;bahasa&gt; — memakai AI',
+    '/file summarize · paraphrase · clean · translate &lt;bahasa&gt; → memakai AI',
     'Opsi hasil: tambahkan --docx / --pdf / --txt untuk mendapat file.',
   ],
   doc: [
@@ -229,7 +229,7 @@ async function loadProducts(uid) {
  * ============================================================ */
 function friendlyFileError(e) {
   const d = String((e && (e.description || e.message)) || '');
-  if (/too big/i.test(d)) return 'File lebih besar dari 20 MB — itu batas unduhan bot Telegram. Kirim file yang lebih kecil.';
+  if (/too big/i.test(d)) return 'File lebih besar dari 20 MB → itu batas unduhan bot Telegram. Kirim file yang lebih kecil.';
   return 'File belum dapat diunduh dari Telegram. Coba kirim ulang file-nya.';
 }
 
@@ -458,7 +458,7 @@ const listGroupText = (group, olderCount) =>
   ].join('\n');
 
 /* ============================================================
- * /doc /study /code (+ /file summarize dsb.) — tugas AI
+ * /doc /study /code (+ /file summarize dsb.) → tugas AI
  * ============================================================ */
 async function aiTask(ctx, msg, { table, sub, rest, label }) {
   let { fmt, args } = takeFlag(rest);
@@ -514,7 +514,7 @@ async function fileExtract(ctx, msg, rest) {
   if (c.error) return ctx.reply(c.error);
   if (!c.text) return ctx.reply(noContentMsg('mengambil teks'));
   const base = (c.name || 'teks').replace(/\.[^.]+$/, '') + '-teks';
-  const head = c.rec && c.rec.n ? `📄 ${c.rec.n} — ${c.text.length.toLocaleString('id-ID')} karakter${c.truncated ? ' (dipotong)' : ''}\n\n` : '';
+  const head = c.rec && c.rec.n ? `📄 ${c.rec.n} → ${c.text.length.toLocaleString('id-ID')} karakter${c.truncated ? ' (dipotong)' : ''}\n\n` : '';
   if (fmt) return deliverText(ctx, c.text, { fmt, base });
   if (c.text.length <= 3500) return ctx.reply(head + c.text);
   await sendFile(ctx, Buffer.from(c.text, 'utf8'), `${base}.txt`, `${head}Teksnya panjang, jadi dikirim sebagai file.`.trim());
@@ -557,7 +557,7 @@ async function pickFromSession(ctx, rest, { min, max, autoMax, verb, cmd }) {
     await ctx.reply(`Untuk ${verb} saya butuh minimal ${min} file, tetapi baru ada ${group.length} di sesi ini. Kirim file lainnya dulu.` + (older > 0 ? `\n(${older} file lama di luar sesi tidak ikut dihitung.)` : ''));
     return null;
   } else {
-    await ctx.reply(`${listGroupText(group, older)}\n\nAda ${group.length} file — yang mana yang ${verb}? Contoh: /file ${cmd} 1 3${cmd === 'merge' ? '  (atau /file merge all untuk semuanya)' : ''}`);
+    await ctx.reply(`${listGroupText(group, older)}\n\nAda ${group.length} file → yang mana yang ${verb}? Contoh: /file ${cmd} 1 3${cmd === 'merge' ? '  (atau /file merge all untuk semuanya)' : ''}`);
     return null;
   }
   if (chosen.length < min || (max && chosen.length > max)) {
@@ -838,7 +838,7 @@ async function productAnalyze(ctx, msg, rest, { importOnly = false } = {}) {
     if (result) via = `impor dari ${rec.n}`;
   }
   if (importOnly && !rec && !rest) {
-    return ctx.reply('Kirim file produk (csv/xlsx/json) lalu /product import — atau balas file-nya. Kolom yang dikenali: nama, kategori, varian, warna, ukuran, harga, stok, sku, deskripsi. Baris dengan nama sama akan digabung jadi VARIAN dari satu produk.');
+    return ctx.reply('Kirim file produk (csv/xlsx/json) lalu /product import → atau balas file-nya. Kolom yang dikenali: nama, kategori, varian, warna, ukuran, harga, stok, sku, deskripsi. Baris dengan nama sama akan digabung jadi VARIAN dari satu produk.');
   }
 
   // 2) Teks -> AI (kalau tersedia), cadangan: aturan sederhana
@@ -857,7 +857,7 @@ async function productAnalyze(ctx, msg, rest, { importOnly = false } = {}) {
         const notes = [];
         if (parsed.clarification) notes.push(`Pertanyaan AI: ${parsed.clarification}`);
         if (rule.products.length && rule.products.length !== products.length) {
-          notes.push(`Pembacaan aturan sederhana menemukan ${rule.products.length} produk, AI menemukan ${products.length} — mohon periksa jumlah produknya.`);
+          notes.push(`Pembacaan aturan sederhana menemukan ${rule.products.length} produk, AI menemukan ${products.length} → mohon periksa jumlah produknya.`);
         }
         result = { products, notes, clarification: null };
         via = 'dianalisis AI';
@@ -876,7 +876,7 @@ async function productAnalyze(ctx, msg, rest, { importOnly = false } = {}) {
   await logHistory(uid, `product ${importOnly ? 'import' : 'analyze'}: ${result.products.length} produk`);
   const v = pt.validateProducts(result.products);
   const notes = [...result.notes];
-  if (v.errors.length) notes.push(`Ada ${v.errors.length} masalah struktur — jalankan /product validate untuk detailnya.`);
+  if (v.errors.length) notes.push(`Ada ${v.errors.length} masalah struktur → jalankan /product validate untuk detailnya.`);
   return replyChunked(ctx, pt.renderProductStructure(result.products, notes, via));
 }
 
@@ -1032,7 +1032,7 @@ async function marketCommand(ctx, msg, rest) {
     if (looksSymbol) return withSeries(ctx, r, (s) => ctx.reply(mk.renderFundamentalsSnapshot(s, r)));
     const c = await gatherContent(ctx, msg, r, { limit: 60000 });
     if (c.error) return ctx.reply(c.error);
-    if (!c.text) return ctx.reply('Kirim laporan keuangannya (PDF/teks) lalu balas dengan /market fundamentals — atau ketik simbolnya (mis. /market fundamentals BBCA) untuk data yang tersedia.');
+    if (!c.text) return ctx.reply('Kirim laporan keuangannya (PDF/teks) lalu balas dengan /market fundamentals → atau ketik simbolnya (mis. /market fundamentals BBCA) untuk data yang tersedia.');
     await ctx.reply('⏳ Menyusun analisis dari dokumen...');
     const a = await ai.askSafe(FUNDAMENTALS_SYSTEM + (c.instruction ? `\nFokus tambahan dari pengguna: ${c.instruction}` : ''), c.text, { maxTokens: 2500 });
     if (!a.ok) return ctx.reply(a.reason);
@@ -1062,8 +1062,8 @@ async function settingsCommand(ctx) {
   const L = [
     '⚙️ <b>Pengaturan & status</b>',
     '',
-    `🤖 AI (Gemini gratis): ${config.aiApiKey ? `✅ aktif (model <code>${esc(config.aiModel)}</code>)` : '⚠️ belum aktif — isi GEMINI_API_KEY di Vercel'}`,
-    `💾 Penyimpanan sesi (Upstash): ${store.enabled ? '✅ aktif' : '⚠️ belum dipasang — merge/compare/export/undo butuh ini'}`,
+    `🤖 AI (Gemini gratis): ${config.aiApiKey ? `✅ aktif (model <code>${esc(config.aiModel)}</code>)` : '⚠️ belum aktif → isi GEMINI_API_KEY di Vercel'}`,
+    `💾 Penyimpanan sesi (Upstash): ${store.enabled ? '✅ aktif' : '⚠️ belum dipasang → merge/compare/export/undo butuh ini'}`,
     `📎 File di sesi ini: ${files.length}`,
     '',
     '<b>Bisa dipakai TANPA AI (gratis penuh):</b> file extract/search/compare/convert/merge/split/rename/compress/merge-text, product analyze(mode sederhana)/validate/import/export, market price/technical/compare/portfolio/news.',
@@ -1080,7 +1080,7 @@ async function historyCommand(ctx) {
   const items = raw.map((r) => { try { return JSON.parse(r); } catch (_) { return null; } }).filter(Boolean).slice(-15).reverse();
   if (!items.length) return ctx.reply('Belum ada riwayat perintah (disimpan 24 jam).');
   const fmt = (t) => new Date(t).toLocaleTimeString('id-ID', { timeZone: 'Asia/Jakarta', hour: '2-digit', minute: '2-digit' });
-  return ctx.reply(['🕘 Riwayat terakhir (24 jam):', ...items.map((i) => `• ${fmt(i.t)} — ${i.c}`)].join('\n'));
+  return ctx.reply(['🕘 Riwayat terakhir (24 jam):', ...items.map((i) => `• ${fmt(i.t)} → ${i.c}`)].join('\n'));
 }
 
 async function cancelCommand(ctx) {

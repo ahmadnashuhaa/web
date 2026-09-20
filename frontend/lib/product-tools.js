@@ -141,7 +141,7 @@ function assignLabel(p, key, value, notes, attrName) {
       const plain = Number(String(value).replace(/[^\d]/g, ''));
       if (prices.length === 1) p.price = prices[0].value;
       else if (!prices.length && plain >= 1) p.price = plain;
-      else notes.push(`Ada beberapa angka harga untuk "${p.name}" — dikosongkan, isi manual.`);
+      else notes.push(`Ada beberapa angka harga untuk "${p.name}" → dikosongkan, isi manual.`);
       break;
     }
     case 'stock': {
@@ -268,7 +268,7 @@ function parseProductText(text) {
     if (priceHit.length && line.replace(/[\d.,\s]|rp|rb|ribu|jt|juta|k/gi, '').length < 3) {
       if (!cur) start(null);
       if (priceHit.length === 1 && cur.price === null) cur.price = priceHit[0].value;
-      else notes.push(`Ada lebih dari satu harga untuk "${cur.name || 'produk'}" — tidak saya pilihkan, isi manual.`);
+      else notes.push(`Ada lebih dari satu harga untuk "${cur.name || 'produk'}" → tidak saya pilihkan, isi manual.`);
       blockStart = false;
       continue;
     }
@@ -342,7 +342,7 @@ function parseProductText(text) {
     finalizeProduct(p, notes);
     if (!p.name) {
       p.name = null;
-      notes.push('Ada data (varian/deskripsi) tanpa nama produk — lengkapi nama produknya.');
+      notes.push('Ada data (varian/deskripsi) tanpa nama produk → lengkapi nama produknya.');
     }
     out.push(p);
   }
@@ -494,7 +494,7 @@ function validateProducts(products) {
       names.set(k, i);
       const t = tokenType(p.name);
       if (['color', 'size', 'storage', 'temperature'].includes(t)) {
-        errors.push(`${label} terlihat seperti VARIAN (${t}), bukan produk. Kemungkinan salah tempat — masukkan ke produk induknya.`);
+        errors.push(`${label} terlihat seperti VARIAN (${t}), bukan produk. Kemungkinan salah tempat → masukkan ke produk induknya.`);
       }
     }
     if (p.sku) {
@@ -513,7 +513,7 @@ function validateProducts(products) {
     for (const [g, list] of Object.entries(p.variants || {})) {
       for (const v of list) {
         const other = names.get(norm(v));
-        if (other !== undefined && other !== i) warns.push(`"${v}" ada sebagai varian di ${label} DAN sebagai produk sendiri — pilih salah satu.`);
+        if (other !== undefined && other !== i) warns.push(`"${v}" ada sebagai varian di ${label} DAN sebagai produk sendiri → pilih salah satu.`);
       }
     }
     if (p.price === null) infos.push(`Harga kosong: ${label}.`);

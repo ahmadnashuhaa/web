@@ -1,6 +1,6 @@
 'use strict';
 /**
- * /market — informasi pasar dari sumber GRATIS, tanpa mengarang data (Master Prompt bagian 18-19, 28).
+ * /market → informasi pasar dari sumber GRATIS, tanpa mengarang data (Master Prompt bagian 18-19, 28).
  *  - Harga & riwayat  : Yahoo Finance chart endpoint (tidak resmi, tanpa API key; bisa tertunda)
  *  - Berita           : Google News RSS
  *  - Indikator        : dihitung sendiri di sini dari riwayat harga (bukan dari AI)
@@ -9,7 +9,7 @@
 const UA = 'Mozilla/5.0 (compatible; DukionBot/1.1)';
 
 const DISCLAIMER =
-  'Sumber: Yahoo Finance (layanan tidak resmi). Data bisa TERTUNDA dan tidak dijamin real-time/akurat — cek ke sumber resmi bursa/broker sebelum mengambil keputusan. Ini informasi, bukan saran membeli/menjual.';
+  'Sumber: Yahoo Finance (layanan tidak resmi). Data bisa TERTUNDA dan tidak dijamin real-time/akurat → cek ke sumber resmi bursa/broker sebelum mengambil keputusan. Ini informasi, bukan saran membeli/menjual.';
 
 /* ---------- Simbol ---------- */
 const ALIAS = {
@@ -245,7 +245,7 @@ function metrics(series) {
 }
 
 /* ---------- Format ---------- */
-const num = (n, d = 2) => (n === null || n === undefined || !Number.isFinite(n) ? '—' : n.toLocaleString('id-ID', { maximumFractionDigits: d, minimumFractionDigits: n !== 0 && Math.abs(n) < 100 ? Math.min(d, 2) : 0 }));
+const num = (n, d = 2) => (n === null || n === undefined || !Number.isFinite(n) ? '→' : n.toLocaleString('id-ID', { maximumFractionDigits: d, minimumFractionDigits: n !== 0 && Math.abs(n) < 100 ? Math.min(d, 2) : 0 }));
 const dec = (n, d = 1) => n.toLocaleString('id-ID', { minimumFractionDigits: d, maximumFractionDigits: d });
 const pct = (n) => (n === null || n === undefined || !Number.isFinite(n) ? 'n/a' : `${n >= 0 ? '+' : ''}${dec(n, 2)}%`);
 function when(sec) {
@@ -257,7 +257,7 @@ function when(sec) {
 }
 const ageNote = (sec) => {
   const h = (Date.now() / 1000 - sec) / 3600;
-  return h > 30 ? ` — data terakhir sudah ${Math.round(h / 24)} hari lalu (pasar mungkin tutup/libur atau data tertunda)` : '';
+  return h > 30 ? ` → data terakhir sudah ${Math.round(h / 24)} hari lalu (pasar mungkin tutup/libur atau data tertunda)` : '';
 };
 const head = (s) => `${s.name} (${s.symbol})${s.exchange ? ' · ' + s.exchange : ''}`;
 
@@ -313,7 +313,7 @@ function renderCompare(list) {
   L.push(row('Maks. turun', (x) => `${dec(x.m.mdd, 1)}%`));
   L.push('');
   const cur = new Set(list.map((s) => s.currency));
-  if (cur.size > 1) L.push(`Catatan: mata uang berbeda (${[...cur].join(', ')}) — bandingkan persentase, bukan harga.`);
+  if (cur.size > 1) L.push(`Catatan: mata uang berbeda (${[...cur].join(', ')}) → bandingkan persentase, bukan harga.`);
   L.push(`Waktu data: ${list.map((s) => `${s.symbol} ${when(s.time)}`).join(' | ')}`);
   L.push('', `⚠️ ${DISCLAIMER}`);
   return L.join('\n');
@@ -350,7 +350,7 @@ function renderPortfolio(rows, parsed) {
       continue;
     }
     const m = metrics(s);
-    L.push(`• ${s.symbol} — ${item.w.toFixed(1)}% · 1 bln ${pct(m.r1m)} · 3 bln ${pct(m.r3m)} · 1 thn ${pct(m.r1y)} · volatilitas ${m.vol === null ? 'n/a' : dec(m.vol, 0) + '%'}`);
+    L.push(`• ${s.symbol} → ${item.w.toFixed(1)}% · 1 bln ${pct(m.r1m)} · 3 bln ${pct(m.r3m)} · 1 thn ${pct(m.r1y)} · volatilitas ${m.vol === null ? 'n/a' : dec(m.vol, 0) + '%'}`);
     for (const k of Object.keys(wsum)) {
       if (m[k] !== null) {
         wsum[k] += (item.w / 100) * m[k];
@@ -378,7 +378,7 @@ function renderFundamentalsSnapshot(s, symbolInput) {
     ? '• Laporan keuangan emiten IDX: idx.co.id (menu Perusahaan Tercatat → Laporan Keuangan)\n• Peraturan/pengawas: ojk.go.id'
     : '• Laporan resmi (perusahaan AS): sec.gov/edgar\n• Halaman Investor Relations perusahaan yang bersangkutan';
   return [
-    `🏢 ${head(s)} — data yang tersedia di bot`,
+    `🏢 ${head(s)} → data yang tersedia di bot`,
     `Waktu data: ${when(s.time)}${ageNote(s.time)}`,
     `• Harga terakhir: ${num(s.price)} ${s.currency}`,
     `• Rentang 52 minggu: ${num(m.lo)} – ${num(m.hi)}`,
@@ -389,7 +389,7 @@ function renderFundamentalsSnapshot(s, symbolInput) {
     'Ambil dari sumber resmi:',
     links,
     '',
-    `Cara lanjut: kirim laporan keuangannya (PDF/teks) lalu reply dengan /market fundamentals — saya susun analisis bertahap (bisnis → pendapatan → profitabilitas → neraca → arus kas → valuasi → pertumbuhan → risiko) hanya dari isi dokumen itu, dengan FAKTA, INTERPRETASI, dan KETIDAKPASTIAN dipisah.`,
+    `Cara lanjut: kirim laporan keuangannya (PDF/teks) lalu reply dengan /market fundamentals → saya susun analisis bertahap (bisnis → pendapatan → profitabilitas → neraca → arus kas → valuasi → pertumbuhan → risiko) hanya dari isi dokumen itu, dengan FAKTA, INTERPRETASI, dan KETIDAKPASTIAN dipisah.`,
     '',
     `⚠️ ${DISCLAIMER}`,
   ].join('\n');

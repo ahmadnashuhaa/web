@@ -42,7 +42,7 @@ function renderGroups(items) {
   const sources = new Map();
   for (const it of items) if (it.s) sources.set(it.s.id, it.s.n);
   const sourceText = sources.size
-    ? `ℹ️ Sumber pesan:\n${[...sources].map(([id, n]) => `• <b>${esc(n)}</b> — chat_id: <code>${id}</code>`).join('\n')}`
+    ? `ℹ️ Sumber pesan:\n${[...sources].map(([id, n]) => `• <b>${esc(n)}</b> → chat_id: <code>${id}</code>`).join('\n')}`
     : null;
   return { texts, sourceText, hidden: groups.length - shown.length };
 }

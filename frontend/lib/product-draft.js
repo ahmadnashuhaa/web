@@ -289,7 +289,7 @@ function composeMessage(o, showList) {
     update: '📸 <b>Update foto/komentar untuk sebuah produk</b>',
   };
   const L = [HEADERS[mode] || HEADERS.update, ''];
-  L.push(`📌 Nama (tebakan): <b>${esc(nameKnown && info.name ? info.name : '(tidak terbaca — teruskan juga post deskripsinya)')}</b>`);
+  L.push(`📌 Nama (tebakan): <b>${esc(nameKnown && info.name ? info.name : '(tidak terbaca → teruskan juga post deskripsinya)')}</b>`);
   L.push(`🏷️ Kategori (tebakan): ${info.category ? esc(info.category) : 'belum yakin → isi manual'}`);
 
   if (info.prices.length === 0) {
@@ -298,7 +298,7 @@ function composeMessage(o, showList) {
     const grosir = info.prices[0].value;
     const modal = computeModal(grosir);
     L.push(`💰 Harga grosir terdeteksi: <b>${rupiah(grosir)}</b> (dari teks "${esc(shorten(info.prices[0].snippet, 40))}")`);
-    L.push(`💸 Modal (grosir + 15%): <b>${rupiah(modal)}</b> — cek dulu, sesuaikan bila perlu`);
+    L.push(`💸 Modal (grosir + 15%): <b>${rupiah(modal)}</b> → cek dulu, sesuaikan bila perlu`);
   } else {
     L.push('💰 Ada beberapa angka harga di teks, saya tidak menebak mana yang grosir:');
     for (const p of info.prices.slice(0, 5)) L.push(`   • ${rupiah(p.value)} ("${esc(shorten(p.snippet, 40))}")`);
@@ -310,7 +310,7 @@ function composeMessage(o, showList) {
   L.push('');
   const listPhotos = (withMsgId) => {
     if (!showList) {
-      L.push('(daftar nama file dipersingkat karena terlalu panjang — lihat "gallery" di draft)');
+      L.push('(daftar nama file dipersingkat karena terlalu panjang → lihat "gallery" di draft)');
       return;
     }
     list.slice(0, 20).forEach((p, i) => {
@@ -337,7 +337,7 @@ function composeMessage(o, showList) {
     L.push(
       list.length
         ? '📷 Post ini sendiri berisi foto (cek di Telegram).'
-        : '📷 Belum ada foto di post ini. Foto biasanya ada di komentar — tunggu pesan "Update" berikutnya dari bot.'
+        : '📷 Belum ada foto di post ini. Foto biasanya ada di komentar → tunggu pesan "Update" berikutnya dari bot.'
     );
   }
 

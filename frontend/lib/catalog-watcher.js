@@ -1,6 +1,6 @@
 'use strict';
 /**
- * FITUR 1 — memantau grup/channel sumber produk, lalu mengirim DRAFT ke chat pribadi pemilik.
+ * FITUR 1 → memantau grup/channel sumber produk, lalu mengirim DRAFT ke chat pribadi pemilik.
  * TIDAK ada satu pun proses ke website. Hanya notifikasi.
  *
  * Catatan penting: Telegram mengirim pesan ke bot SATU PER SATU. Karena itu bot tidak "menunggu"

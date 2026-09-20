@@ -4,7 +4,7 @@
  * Dipakai oleh /doc, /study, /code, /file (mode teks + OCR), /product analyze, dan /market research.
  *
  * Kalau GEMINI_API_KEY belum diisi, semua pemanggilan gagal dengan pesan yang RAMAH
- * (bukan stack trace teknis) — sesuai prinsip error handling di Master Prompt bagian 25.
+ * (bukan stack trace teknis) → sesuai prinsip error handling di Master Prompt bagian 25.
  */
 const config = require('./config');
 
@@ -72,7 +72,7 @@ async function ask(systemPrompt, userText, { maxTokens = 1500, maxChars = 50000 
   return generate(systemPrompt, [{ text: String(userText).slice(0, maxChars) }], maxTokens);
 }
 
-/** Kirim gambar/PDF (base64) + instruksi ke AI — dipakai untuk OCR dokumen scan/foto. */
+/** Kirim gambar/PDF (base64) + instruksi ke AI → dipakai untuk OCR dokumen scan/foto. */
 async function askWithFile(systemPrompt, userText, { mimeType, buffer }, { maxTokens = 3000 } = {}) {
   if (!buffer || buffer.length > MAX_INLINE_BYTES) {
     throw friendly('File terlalu besar untuk dibaca AI (maksimal sekitar 14 MB).');
