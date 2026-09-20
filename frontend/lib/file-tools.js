@@ -9,6 +9,7 @@ const XLSX = require('xlsx');
 const JSZip = require('jszip');
 const { PDFDocument, StandardFonts } = require('pdf-lib');
 const docx = require('docx');
+const pptxTools = require('./pptx-tools');
 
 /* ---------- Jenis file ---------- */
 function kindOf(name = '', mime = '') {
@@ -30,16 +31,16 @@ function kindOf(name = '', mime = '') {
 const SUPPORTED_READ = 'txt, md, csv, json, xml, pdf, docx, pptx, xlsx/xls (gambar & PDF scan lewat AI/OCR)';
 
 const TARGETS = {
-  pdf: ['txt', 'md', 'docx'],
-  docx: ['txt', 'md', 'pdf'],
+  pdf: ['txt', 'md', 'docx', 'pptx'],
+  docx: ['txt', 'md', 'pdf', 'pptx'],
   pptx: ['txt', 'md', 'docx', 'pdf'],
-  txt: ['docx', 'pdf', 'md'],
-  md: ['docx', 'pdf', 'txt'],
-  xlsx: ['csv', 'json', 'txt'],
-  csv: ['xlsx', 'json', 'txt'],
-  json: ['csv', 'xlsx', 'txt'],
+  txt: ['docx', 'pdf', 'md', 'pptx'],
+  md: ['docx', 'pdf', 'txt', 'pptx'],
+  xlsx: ['csv', 'json', 'txt', 'pptx'],
+  csv: ['xlsx', 'json', 'txt', 'pptx'],
+  json: ['csv', 'xlsx', 'txt', 'pptx'],
   xml: ['txt'],
-  image: ['txt', 'md', 'docx', 'pdf'], // lewat OCR AI
+  image: ['txt', 'md', 'docx', 'pdf', 'pptx'], // lewat OCR AI
 };
 const supportedTargets = (kind) => TARGETS[kind] || [];
 
@@ -59,13 +60,25 @@ async function pptxText(buf) {
     .map((f) => ({ f, m: f.match(/^ppt\/slides\/slide(\d+)\.xml$/) }))
     .filter((x) => x.m)
     .sort((a, b) => Number(a.m[1]) - Number(b.m[1]));
+  const paragraphs = (xml) =>
+    (String(xml).replace(/<a:fld[\s\S]*?<\/a:fld>/g, '').match(/<a:p[ >][\s\S]*?<\/a:p>/g) || [])
+      .map((p) => decodeXml((p.match(/<a:t>([\s\S]*?)<\/a:t>/g) || []).map((t) => t.replace(/<\/?a:t>/g, '')).join('')))
+      .filter((t) => t.trim());
   const out = [];
   for (const s of slides) {
     const xml = await zip.files[s.f].async('string');
-    const paras = (xml.match(/<a:p[ >][\s\S]*?<\/a:p>/g) || [])
-      .map((p) => decodeXml((p.match(/<a:t>([\s\S]*?)<\/a:t>/g) || []).map((t) => t.replace(/<\/?a:t>/g, '')).join('')))
-      .filter((t) => t.trim());
-    out.push(`--- Slide ${s.m[1]} ---\n${paras.join('\n')}`);
+    let block = `--- Slide ${s.m[1]} ---\n${paragraphs(xml).join('\n')}`;
+    // Catatan pembicara (speaker notes), dicari lewat relasi slide -> notesSlide
+    const relFile = zip.files[`ppt/slides/_rels/slide${s.m[1]}.xml.rels`];
+    if (relFile) {
+      const rel = (await relFile.async('string')).match(/Target="\.\.\/notesSlides\/(notesSlide\d+\.xml)"/);
+      const nf = rel && zip.files[`ppt/notesSlides/${rel[1]}`];
+      if (nf) {
+        const notes = paragraphs(await nf.async('string')).join('\n');
+        if (notes.trim()) block += `\n[Catatan pembicara]\n${notes}`;
+      }
+    }
+    out.push(block);
   }
   return out.join('\n\n');
 }
@@ -246,6 +259,24 @@ function rowsToBuffer(rows, target) {
   return Buffer.from(XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' }));
 }
 
+/** Word -> teks berstruktur: Heading 1-3 jadi "# judul", daftar jadi "- poin". Dipakai untuk membuat slide. */
+async function docxStructuredText(buf) {
+  const { value } = await mammoth.convertToHtml({ buffer: buf });
+  return decodeXml(
+    String(value)
+      .replace(/<h([1-3])[^>]*>([\s\S]*?)<\/h\1>/gi, (_, n, t) => `\n\n${'#'.repeat(Number(n))} ${t.replace(/<[^>]+>/g, '')}\n`)
+      .replace(/<li[^>]*>([\s\S]*?)<\/li>/gi, (_, t) => `\n- ${t.replace(/<[^>]+>/g, '')}`)
+      .replace(/<\/(p|tr|table|ul|ol)>/gi, '\n\n')
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<[^>]+>/g, '')
+  )
+    .replace(/[ \t]+\n/g, '\n')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+const prettyTitle = (base) => String(base || '').replace(/[-_]+/g, ' ').replace(/\s+/g, ' ').trim();
+
 /* ---------- Konversi ---------- */
 /**
  * Ubah format file. Mengembalikan { buf, name, note } atau { error }.
@@ -263,6 +294,26 @@ async function convertBuffer(kind, buf, target, opts = {}) {
     };
   }
   const getText = async () => (opts.text !== undefined ? opts.text : await extractText(kind, buf));
+
+  if (target === 'pptx') {
+    const title = prettyTitle(base);
+    if (['csv', 'xlsx', 'json'].includes(kind)) {
+      const rows = tableRows(kind, buf);
+      if (!rows.length) return { error: 'Tabelnya kosong (tidak ada baris data di bawah header).' };
+      const { deck, note } = pptxTools.rowsToSlides(rows, { title: title || 'Data' });
+      return { buf: await pptxTools.buildPptx(deck), name: `${base}.pptx`, note: note || 'Satu tabel per slide (maks 8 baris per slide).' };
+    }
+    let text = opts.text !== undefined ? opts.text : kind === 'docx' ? await docxStructuredText(buf) : await extractText(kind, buf);
+    if (kind === 'pdf') text = reflow(text);
+    if (!text || !text.trim()) return { error: 'Tidak ada teks yang bisa dibaca dari file itu (mungkin hasil scan/gambar).' };
+    const { deck, note } = pptxTools.textToSlides(text, { title });
+    if (!deck.slides.length) return { error: 'Isi file terlalu sedikit untuk dijadikan slide.' };
+    return {
+      buf: await pptxTools.buildPptx(deck),
+      name: `${base}.pptx`,
+      note: [note, 'Slide dibuat otomatis dari teks: judul slide ditebak dari struktur teks, gambar/tabel asli tidak ikut. Rapikan di PowerPoint bila perlu. Untuk susunan yang lebih rapi, coba /doc slides (memakai AI).'].filter(Boolean).join(' '),
+    };
+  }
 
   if (['csv', 'xlsx', 'json'].includes(target)) {
     const rows = tableRows(kind, buf);
@@ -473,6 +524,7 @@ module.exports = {
   textToPdf,
   textToDocx,
   reflow,
+  docxStructuredText,
   tableRows,
   mergePdfs,
   splitPdf,

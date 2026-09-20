@@ -14,6 +14,8 @@ const ai = require('./ai-client');
 const ft = require('./file-tools');
 const pt = require('./product-tools');
 const mk = require('./market');
+const pptxTools = require('./pptx-tools');
+const { slugify } = require('./product-draft');
 
 const guard = (ctx) => Boolean(ctx.from) && ctx.chat && ctx.chat.type === 'private';
 
@@ -25,7 +27,7 @@ const MENU = [
   '',
   '📦 <b>Product</b>',
   '/product analyze → pisahkan produk / varian / atribut',
-  '/product validate · import · export [json|csv|xlsx]',
+  '/product validate · import · export [json|csv|xlsx|pptx]',
   '',
   '📁 <b>File</b> (kirim file dulu, lalu perintah → atau balas file-nya)',
   '/file extract · search · compare · list',
@@ -35,9 +37,10 @@ const MENU = [
   '📝 <b>Doc</b>',
   '/doc summarize · paraphrase · rewrite · grammar · translate',
   '/doc format · extract · outline · references · cite · convert',
+  '📽️ <b>/doc slides</b> → buat presentasi PowerPoint (.pptx) dari topik atau dokumen',
   '',
   '🎓 <b>Study</b>',
-  '/study explain · summarize · quiz · answer · flashcard · outline · research · cite',
+  '/study explain · summarize · quiz · answer · flashcard · outline · research · cite · slides',
   '',
   '💻 <b>Code</b>',
   '/code explain · debug · review · refactor · convert · format · optimize · error',
@@ -48,7 +51,7 @@ const MENU = [
   '⚙️ <b>Utility</b>',
   '/settings · /history · /undo · /cancel · /help · /menu',
   '',
-  'Bahasa biasa juga bisa: "ubah PDF ini jadi Word", "gabungkan dua file ini", "buat lebih formal".',
+  'Bahasa biasa juga bisa: "ubah PDF ini jadi Word", "gabungkan dua file ini", "buat lebih formal", "buatkan presentasi tentang pemasaran digital 8 slide".',
   'Ketik perintahnya saja (mis. <code>/file</code>) untuk melihat sub-perintah dan contohnya.',
 ].join('\n');
 
@@ -58,26 +61,27 @@ const GROUP_HELP = {
     '/product analyze &lt;teks&gt; → analisis (atau balas teks/file)',
     '/product validate → periksa duplikat, varian salah tempat, data kosong',
     '/product import → impor dari file csv/xlsx/json (baris bernama sama = varian)',
-    '/product export [json|csv|xlsx] → kirim hasil terakhir sebagai file',
+    '/product export [json|csv|xlsx|pptx] → kirim hasil terakhir sebagai file (pptx = katalog, satu slide per produk)',
     'Contoh input: "Kaos Oversize", lalu baris warna/ukuran di bawahnya. Pisahkan produk dengan baris kosong.',
   ],
   file: [
     '📁 <b>/file</b> → kirim file lebih dulu (atau balas file), lalu:',
     '/file extract → ambil teks (gratis; gambar/scan memakai AI)',
     '/file search &lt;kata&gt; · /file compare · /file list',
-    '/file convert &lt;format&gt; → pdf, docx, txt, md, csv, xlsx, json',
+    '/file convert &lt;format&gt; → pdf, docx, pptx, txt, md, csv, xlsx, json',
     '/file merge [nomor…|all] [teks sampul] · /file split &lt;1-3,5 | each | per 5&gt;',
     '/file rename &lt;nama&gt; · /file compress [all] · /file merge-text &lt;teks&gt; (awalan "akhir:" = di akhir)',
     '/file summarize · paraphrase · clean · translate &lt;bahasa&gt; → memakai AI',
-    'Opsi hasil: tambahkan --docx / --pdf / --txt untuk mendapat file.',
+    'Opsi hasil: tambahkan --docx / --pdf / --pptx / --txt untuk mendapat file.',
   ],
   doc: [
     '📝 <b>/doc</b> &lt;sub&gt; &lt;teks&gt; (atau balas teks/file)',
     'summarize · paraphrase · rewrite · grammar · translate &lt;bahasa&gt;',
     'format · extract · outline · references · cite · convert',
+    '📽️ <code>/doc slides &lt;topik&gt; [8 slide]</code> → presentasi PowerPoint (atau balas dokumen/teks). Alias: /ppt, /slides, /presentasi',
     'Tambahkan instruksi setelah sub, mis. <code>/doc rewrite lebih formal</code> (saat membalas file).',
   ],
-  study: ['🎓 <b>/study</b> &lt;sub&gt; &lt;teks/topik&gt;', 'explain · summarize · quiz · answer · flashcard · outline · research · cite'],
+  study: ['🎓 <b>/study</b> &lt;sub&gt; &lt;teks/topik&gt;', 'explain · summarize · quiz · answer · flashcard · outline · research · cite · slides'],
   code: ['💻 <b>/code</b> &lt;sub&gt; &lt;kode&gt;', 'explain · debug · review · refactor · convert &lt;bahasa&gt; · format · optimize · error'],
   market: [
     '📊 <b>/market</b> &lt;sub&gt;',
@@ -119,7 +123,7 @@ async function sendFile(ctx, buf, name, caption) {
 /** Kirim teks; kalau panjang atau diminta format file, kirim sebagai file. */
 async function deliverText(ctx, text, { fmt = null, base = 'hasil', limit = 3800 } = {}) {
   if (fmt === 'txt') return sendFile(ctx, Buffer.from(text, 'utf8'), `${base}.txt`);
-  if (fmt === 'docx' || fmt === 'pdf') {
+  if (fmt === 'docx' || fmt === 'pdf' || fmt === 'pptx') {
     const r = await ft.convertBuffer('txt', Buffer.from(text, 'utf8'), fmt, { baseName: base });
     if (!r.error) return sendFile(ctx, r.buf, r.name);
   }
@@ -419,7 +423,7 @@ function parseSub(rest, allowed) {
 }
 
 function takeFlag(args) {
-  const m = args.match(/(?:^|\s)--(file|txt|docx|pdf)\b/i);
+  const m = args.match(/(?:^|\s)--(file|txt|docx|pdf|pptx)\b/i);
   if (!m) return { fmt: null, args };
   const f = m[1].toLowerCase();
   return { fmt: f === 'file' ? 'docx' : f, args: args.replace(m[0], ' ').trim() };
@@ -428,6 +432,7 @@ function takeFlag(args) {
 const TARGET_WORDS = {
   pdf: 'pdf', docx: 'docx', doc: 'docx', word: 'docx', txt: 'txt', teks: 'txt', text: 'txt', md: 'md', markdown: 'md',
   csv: 'csv', xlsx: 'xlsx', excel: 'xlsx', xls: 'xlsx', json: 'json',
+  pptx: 'pptx', ppt: 'pptx', powerpoint: 'pptx', slide: 'pptx', slides: 'pptx', presentasi: 'pptx',
 };
 function parseTarget(text) {
   const words = String(text || '').toLowerCase().match(/[a-z]+/g) || [];
@@ -492,15 +497,74 @@ async function aiTask(ctx, msg, { table, sub, rest, label }) {
   return deliverText(ctx, out, { fmt, base });
 }
 
+/* ============================================================
+ * /doc slides → presentasi PowerPoint (AI menyusun isi, kode membuat file .pptx)
+ * ============================================================ */
+const DECK_ALIASES = ['slides', 'slide', 'ppt', 'pptx', 'powerpoint', 'presentasi'];
+
+const deckSystem = ({ topicOnly, n }) =>
+  'Kamu penyusun presentasi. ' +
+  (topicOnly
+    ? 'Susun presentasi tentang topik dari pengguna memakai pengetahuan umum yang aman. JANGAN mengarang angka statistik, nama orang/perusahaan, kutipan, atau sumber. Bila butuh data spesifik, tulis "[isi data]" agar pengguna melengkapi sendiri. '
+    : 'Susun presentasi HANYA dari isi bahan yang diberikan. Jangan menambah fakta, angka, atau sumber di luar bahan. ') +
+  `Jumlah slide isi: ${n ? `tepat ${n}` : '6 sampai 10'} (tidak termasuk slide judul). Tiap slide: judul singkat (maks 8 kata), 3 sampai 5 poin (maks 15 kata per poin, bukan paragraf), dan "notes" berisi catatan pembicara 1-2 kalimat. ` +
+  'Slide pertama isi sebaiknya pembukaan/latar belakang dan slide terakhir kesimpulan atau langkah berikutnya. Gunakan bahasa yang sama dengan bahan/topik (default Bahasa Indonesia). ' +
+  'Jawab HANYA JSON tanpa teks lain: {"title":"","subtitle":"","slides":[{"title":"","bullets":["",""],"notes":""}]}.';
+
+async function deckCommand(ctx, msg, rest) {
+  const uid = String(ctx.from.id);
+  let args = takeFlag(rest).args;
+  let n = null;
+  const nm = args.match(/\b(\d{1,2})\s*(slide|slides|halaman|lembar)\b/i);
+  if (nm) {
+    n = Math.min(Math.max(Number(nm[1]), 3), 30);
+    args = args.replace(nm[0], ' ').replace(/\s+/g, ' ').trim();
+  }
+  const c = await gatherContent(ctx, msg, args);
+  if (c.error) return ctx.reply(c.error);
+  if (!c.text) return ctx.reply(`Belum ada bahan untuk presentasi. Tulis topiknya (mis. /doc slides strategi pemasaran toko online 8 slide), atau kirim/balas file dokumennya.`);
+
+  const topicOnly = c.source === 'arg' && c.text.length < 300 && !c.text.includes('\n');
+  let system = deckSystem({ topicOnly, n });
+  if (c.instruction) system += `\n\nInstruksi tambahan dari pengguna (ikuti bila tidak bertentangan dengan aturan di atas): ${c.instruction}`;
+
+  await ctx.reply('⏳ Menyusun presentasi...');
+  const r = await ai.askSafe(system + COMMON, topicOnly ? `Topik: ${c.text}` : `Bahan:\n${c.text}`, { maxTokens: 3500 });
+  let deck = r.ok ? pptxTools.deckFromAi(parseJsonLoose(r.text)) : null;
+  let note = null;
+  if (!deck) {
+    if (topicOnly) return ctx.reply(r.ok ? 'AI tidak memberi susunan yang bisa dibaca. Coba lagi, atau tulis topiknya lebih spesifik.' : r.reason);
+    // Ada bahan berupa dokumen/teks: tetap bisa dibuatkan slide tanpa AI (kurang rapi, tapi gratis).
+    const t = pptxTools.textToSlides(c.text, { title: c.name ? c.name.replace(/\.[^.]+$/, '').replace(/[-_]+/g, ' ') : '' });
+    deck = t.deck;
+    note = `${r.ok ? 'Hasil AI tidak bisa dibaca' : r.reason} Jadi slide dibuat otomatis dari teks tanpa AI (kurang rapi).`;
+  }
+  if (!deck.slides.length) return ctx.reply('Bahannya terlalu sedikit untuk dijadikan slide.');
+
+  const buf = await pptxTools.buildPptx(deck);
+  await logHistory(uid, `slides: ${deck.slides.length} slide`);
+  const titles = deck.slides.slice(0, 12).map((s, i) => `${i + 1}. ${s.title}`).join('\n');
+  const more = deck.slides.length > 12 ? `\n…dan ${deck.slides.length - 12} slide lainnya` : '';
+  const cap = [
+    `✅ Presentasi siap: ${deck.slides.length} slide isi + 1 slide judul`,
+    titles + more,
+    note,
+    c.truncated ? 'Catatan: hanya bagian awal dokumen yang diproses karena sangat panjang.' : null,
+    'Buka di PowerPoint, lalu ganti tampilan lewat Design → Themes bila perlu. Cek ulang isinya sebelum dipakai.',
+  ].filter(Boolean).join('\n');
+  return sendFile(ctx, buf, `${slugify(deck.title)}.pptx`, cap);
+}
+
 async function taskCommand(ctx, msg, group, table, rest) {
   const subs = Object.keys(table);
-  const extra = group === 'doc' ? ['convert'] : [];
+  const extra = group === 'doc' ? ['convert', ...DECK_ALIASES] : group === 'study' ? DECK_ALIASES : [];
   const { sub, rest: r, unknown } = parseSub(rest, [...subs, ...extra]);
   if (!sub) {
     const help = GROUP_HELP[group].join('\n');
     return ctx.reply(unknown ? `Sub-perintah "${unknown}" belum saya kenal.\n\n${help}` : help, { parse_mode: 'HTML' });
   }
   if (group === 'doc' && sub === 'convert') return fileConvert(ctx, msg, r);
+  if (DECK_ALIASES.includes(sub)) return deckCommand(ctx, msg, r);
   return aiTask(ctx, msg, { table, sub: sub === 'citation' ? 'cite' : sub, rest: r, label: group });
 }
 
@@ -914,12 +978,17 @@ async function productExport(ctx, rest) {
   if (!saved || !saved.products || !saved.products.length) {
     return ctx.reply(store.enabled ? 'Belum ada hasil produk untuk diekspor. Jalankan /product analyze atau /product import dulu.' : `Ekspor butuh penyimpanan sesi. ${NEEDS_STORE}`);
   }
-  const f = (String(rest).toLowerCase().match(/\b(json|csv|xlsx|excel)\b/) || [])[1] || 'json';
-  const fmt = f === 'excel' ? 'xlsx' : f;
+  const f = (String(rest).toLowerCase().match(/\b(json|csv|xlsx|excel|pptx|ppt|powerpoint)\b/) || [])[1] || 'json';
+  const fmt = f === 'excel' ? 'xlsx' : /^(ppt|powerpoint)$/.test(f) ? 'pptx' : f;
   const stamp = new Date().toISOString().slice(0, 10);
   let buf;
+  let extraNote = '';
   if (fmt === 'json') buf = Buffer.from(JSON.stringify({ products: saved.products }, null, 2), 'utf8');
-  else {
+  else if (fmt === 'pptx') {
+    const r = pptxTools.productsToSlides(saved.products, { title: 'Katalog Produk' });
+    buf = await pptxTools.buildPptx(r.deck);
+    extraNote = ` Satu slide per produk (tanpa foto).${r.note ? ' ' + r.note : ''}`;
+  } else {
     const XLSX = require('xlsx');
     const ws = XLSX.utils.json_to_sheet(pt.flattenForExport(saved.products));
     if (fmt === 'csv') buf = Buffer.from('\ufeff' + XLSX.utils.sheet_to_csv(ws), 'utf8');
@@ -930,7 +999,7 @@ async function productExport(ctx, rest) {
     }
   }
   await logHistory(uid, `product export ${fmt}`);
-  return sendFile(ctx, buf, `produk-${stamp}.${fmt}`, `✅ ${saved.products.length} produk diekspor (${fmt.toUpperCase()}).`);
+  return sendFile(ctx, buf, `produk-${stamp}.${fmt}`, `✅ ${saved.products.length} produk diekspor (${fmt.toUpperCase()}).${extraNote}`);
 }
 
 async function productCommand(ctx, msg, rest) {
@@ -1119,6 +1188,7 @@ const ALIAS = {
   rename: ['file', 'rename'], compress: ['file', 'compress'], kompres: ['file', 'compress'], compare: ['file', 'compare'], bandingkan: ['file', 'compare'],
   search: ['file', 'search'], cari: ['file', 'search'], extract: ['file', 'extract'], ekstrak: ['file', 'extract'],
   quiz: ['study', 'quiz'], kuis: ['study', 'quiz'], jelaskan: ['study', 'explain'], flashcard: ['study', 'flashcard'], debug: ['code', 'debug'],
+  slides: ['doc', 'slides'], slide: ['doc', 'slides'], ppt: ['doc', 'slides'], pptx: ['doc', 'slides'], powerpoint: ['doc', 'slides'], presentasi: ['doc', 'slides'],
   analyze: ['product', 'analyze'], analisis: ['product', 'analyze'], validate: ['product', 'validate'], harga: ['market', 'price'],
 };
 
@@ -1166,6 +1236,15 @@ async function route(ctx, msg, cmd, rest) {
 
 /** Kalimat biasa -> perintah setara (bagian 22). Mengembalikan null kalau bukan perintah. */
 const NL = [
+  // Presentasi: "buatkan presentasi tentang ...", "jadikan file ini presentasi 10 slide". (Kata "pptx" = konversi biasa, ditangani aturan convert di bawah.)
+  {
+    rx: /^(buat(kan)?|bikin(kan)?|susun(kan)?|jadikan|ubah|ringkas(kan)?|rangkum)\b.*\b(presentasi|power ?point|slides?|ppt)\b/i,
+    run: (c, m, t) => {
+      const kw = t.match(/\b(presentasi|power ?point|slides?|ppt)\b/i);
+      const after = t.slice(kw.index + kw[0].length).replace(/^\s*(tentang|mengenai|soal|dari|untuk|:)\s*/i, '').trim();
+      return deckCommand(c, m, after);
+    },
+  },
   { rx: /^(ubah|convert|konversi|jadikan|ganti format|simpan sebagai)\b/i, when: (t) => Boolean(parseTarget(t)), run: (c, m, t) => fileConvert(c, m, t) },
   { rx: /^(gabung(kan)?|satukan|merge)\b/i, run: (c, m, t) => fileMerge(c, m, (t.match(/teks\s*:\s*([\s\S]+)$/i) || [, ''])[1]) },
   { rx: /^(pisah(kan)?|pecah(kan)?|split)\b/i, run: (c, m, t) => fileSplit(c, m, t.replace(/^\S+\s*(halaman|pdf|file)?\s*/i, '')) },
