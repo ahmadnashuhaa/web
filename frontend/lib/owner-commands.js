@@ -6,7 +6,7 @@
 const config = require('./config');
 const store = require('./store');
 const { esc } = require('./telegram-utils');
-const { analyze, renderProductMessage } = require('./product-draft');
+const { handleForward } = require('./forward-batch');
 const { broadcastText, buildReport } = require('./broadcast');
 
 const isOwner = (ctx) => Boolean(config.ownerId) && ctx.from && String(ctx.from.id) === config.ownerId;
@@ -80,40 +80,11 @@ function registerOwnerCommands(bot) {
     return ctx.reply(buildReport(result));
   });
 
-  // Owner meneruskan (forward) pesan ke bot:
-  //  - kalau pesannya ada teks/keterangan  -> bot membuat DRAFT produk (cara manual, tanpa jadi admin grup)
-  //  - selalu memberi tahu chat_id sumbernya kalau terbaca
+  // Owner meneruskan (forward) pesan ke bot -> ditangani forward-batch.js
+  // (beberapa pesan yang diteruskan sekaligus digabung jadi produk yang benar).
   bot.on('message', async (ctx, next) => {
-    if (ctx.chat.type === 'private' && isOwner(ctx)) {
-      const fo = ctx.message.forward_origin;
-      if (fo) {
-        const src = fo.chat || fo.sender_chat || null;
-        const text = ctx.message.text || ctx.message.caption || '';
-
-        if (text) {
-          const info = analyze({ rootText: text });
-          await ctx.reply(
-            renderProductMessage({ mode: 'forward', info, postHasPhoto: Boolean(ctx.message.photo) }),
-            { parse_mode: 'HTML', link_preview_options: { is_disabled: true } }
-          );
-          if (src) {
-            await ctx.reply(
-              `ℹ️ Sumber pesan: <b>${esc(src.title || src.username || 'chat')}</b>\nchat_id: <code>${src.id}</code>`,
-              { parse_mode: 'HTML' }
-            );
-          }
-          return;
-        }
-
-        if (src) {
-          return ctx.reply(
-            `📍 Pesan ini berasal dari: <b>${esc(src.title || src.username || 'chat')}</b>\nchat_id: <code>${src.id}</code>`,
-            { parse_mode: 'HTML' }
-          );
-        }
-        if (fo.sender_user) return ctx.reply(`User ID: ${fo.sender_user.id}`);
-        return ctx.reply('Pengirim aslinya menyembunyikan identitas, chat_id tidak bisa dibaca.');
-      }
+    if (ctx.chat.type === 'private' && isOwner(ctx) && ctx.message.forward_origin) {
+      return handleForward(ctx);
     }
     return next();
   });

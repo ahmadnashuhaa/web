@@ -42,4 +42,5 @@ module.exports = {
     return n;
   },
   list: (k) => safe(['LRANGE', k, '0', '-1']),
+  del: (k) => safe(['DEL', k]),
 };

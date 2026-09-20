@@ -5,7 +5,7 @@
  */
 const config = require('./config');
 const store = require('./store');
-const { analyze, renderProductMessage } = require('./product-draft');
+const { analyze, splitComments, renderProductMessage } = require('./product-draft');
 const { notifyOwner, sleep } = require('./telegram-utils');
 
 const TTL = 30 * 24 * 3600; // simpan data thread 30 hari
@@ -27,17 +27,16 @@ async function announceNewPost(api, text, postHasPhoto) {
 /** Kirim ringkasan update (foto + teks komentar) untuk satu produk. */
 async function sendUpdate(api, { chatId, rootId, rootText, items, freshItems }) {
   const sorted = [...items].sort((a, b) => a.m - b.m);
-  const photoIds = sorted.filter((i) => i.t === 'photo').map((i) => i.m);
-  const commentTexts = sorted.filter((i) => i.x).map((i) => i.x);
-  const info = analyze({ rootText, commentTexts });
+  const { photos, texts } = splitComments(sorted);
+  const info = analyze({ rootText, commentTexts: texts, labels: photos.map((p) => p.label) });
   const html = renderProductMessage({
     mode: 'update',
     info,
     nameKnown: Boolean(rootText),
-    photoMsgIds: photoIds,
+    photos,
     freshPhotoCount: freshItems.filter((i) => i.t === 'photo').length,
-    commentTexts,
-    link: threadLink(chatId, (photoIds[0] || sorted[0].m), rootId),
+    commentTexts: texts,
+    link: threadLink(chatId, (photos[0] ? photos[0].m : sorted[0].m), rootId),
   });
   await notifyOwner(api, html);
 }

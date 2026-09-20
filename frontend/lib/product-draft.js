@@ -68,9 +68,10 @@ function countWords(text, words) {
   return n;
 }
 
-function guessCategory(all, title) {
+// Kategori hanya ditebak dari JUDUL (isi deskripsi sering menyebut "hijab friendly" dsb. dan menyesatkan).
+function guessCategory(title) {
   const scores = Object.entries(CATEGORY_WORDS)
-    .map(([cat, words]) => [cat, countWords(all, words) + countWords(title, words) * 2])
+    .map(([cat, words]) => [cat, countWords(title, words)])
     .sort((a, b) => b[1] - a[1]);
   if (scores[0][1] === 0 || scores[0][1] === scores[1][1]) return null; // tidak yakin
   return scores[0][0];
@@ -99,14 +100,24 @@ function extractVariants(text) {
   return list.length ? list : null;
 }
 
+// Baris yang BUKAN deskripsi: tabel ukuran, link, dsb.
+const SKIP_LINE = /(https?:\/\/|www\.|lingkar|panjang|muat\s*bb|katalog|ukuran|^size\b|^(xs|s|m|l|\d?xl)\s*:?$|^(warna|varian|variant|color|colour)\s*[:\-])/i;
+
+function cutWords(str, n) {
+  if (str.length <= n) return str;
+  const cut = str.slice(0, n);
+  const i = cut.lastIndexOf(' ');
+  return (i > n * 0.6 ? cut.slice(0, i) : cut).replace(/[\s,;:\-–]+$/, '') + '…';
+}
+
 function extractDesc(text) {
   const lines = String(text || '')
     .split(/\r?\n/)
     .map((l) => l.trim())
     .filter(Boolean)
     .slice(1)
-    .filter((l) => detectPrices(l).length === 0 && !/^(warna|color|colour|varian|variant)\s*[:\-]/i.test(l));
-  const d = lines.join(' ').replace(/\s+/g, ' ').trim().slice(0, 200);
+    .filter((l) => !SKIP_LINE.test(l) && detectPrices(l).length === 0);
+  const d = cutWords(lines.join(' ').replace(/\s+/g, ' ').trim(), 160);
   return d || null;
 }
 
@@ -123,17 +134,75 @@ function slugify(s) {
   );
 }
 
-/** Ringkas semua teks (post + komentar) menjadi info produk. */
-function analyze({ rootText, commentTexts = [] }) {
+/** Keterangan foto yang pendek (1 baris, <= 40 huruf, bukan harga) dianggap NAMA WARNA/VARIAN. */
+function isLabel(x) {
+  const t = String(x || '').trim();
+  return Boolean(t) && !t.includes('\n') && t.length <= 40 && detectPrices(t).length === 0;
+}
+
+/** Ringkas teks (post + komentar/catatan) + label foto menjadi info produk. */
+function analyze({ rootText, commentTexts = [], labels = [] }) {
   const all = [rootText, ...commentTexts].filter(Boolean).join('\n');
   const name = extractName(rootText);
+  const fromLabels = [...new Set(labels.filter(Boolean))].slice(0, 30);
   return {
     name,
-    category: guessCategory(all, name || ''),
+    category: guessCategory(name || ''),
     prices: detectPrices(all),
-    variants: extractVariants(all),
+    variants: fromLabels.length ? fromLabels : extractVariants(all),
+    variantsFromLabels: fromLabels.length > 0,
     desc: extractDesc(rootText),
   };
+}
+
+/** Pisahkan komentar (mode otomatis) menjadi daftar foto (+label) dan teks biasa. */
+function splitComments(items) {
+  const photos = [];
+  const texts = [];
+  for (const it of [...items].sort((a, b) => a.m - b.m)) {
+    const x = String(it.x || '').trim();
+    if (it.t === 'photo') {
+      photos.push({ m: it.m, label: isLabel(x) ? x : null });
+      if (x && !isLabel(x)) texts.push(x);
+    } else if (x) texts.push(x);
+  }
+  return { photos, texts };
+}
+
+/**
+ * Mode teruskan: kelompokkan pesan yang diteruskan sekaligus menjadi PRODUK.
+ *  - teks/deskripsi          -> produk baru
+ *  - foto berketerangan pendek -> foto + nama varian/warna milik produk itu
+ *  - teks lanjutan sebelum ada foto -> catatan tambahan produk yang sama
+ */
+function groupForwarded(items) {
+  const sorted = [...items].sort((a, b) => a.m - b.m);
+  const groups = [];
+  let cur = null;
+  const fresh = () => {
+    const g = { rootText: null, photos: [], notes: [] };
+    groups.push(g);
+    return g;
+  };
+  for (const it of sorted) {
+    const x = String(it.x || '').trim();
+    const photo = it.t === 'photo';
+    if (photo && (!x || isLabel(x))) {
+      if (!cur) cur = fresh();
+      cur.photos.push({ m: it.m, label: x || null });
+      continue;
+    }
+    if (cur && cur.rootText && cur.photos.length === 0) { cur.notes.push(x); continue; }
+    if (cur && !cur.rootText) {
+      cur.rootText = x;
+      if (photo) cur.photos.push({ m: it.m, label: null });
+      continue;
+    }
+    cur = fresh();
+    cur.rootText = x;
+    if (photo) cur.photos.push({ m: it.m, label: null });
+  }
+  return groups;
 }
 
 /* ---------- Draft kode ---------- */
@@ -169,31 +238,43 @@ function shorten(s, n) {
   return t.length > n ? t.slice(0, n - 1) + '…' : t;
 }
 
+function photoFiles(slug, photos) {
+  const used = new Set();
+  return photos.map((p, i) => {
+    const base = p.label && /[a-z0-9]/i.test(p.label) ? `${slug}-${slugify(p.label)}` : `${slug}-${i + 1}`;
+    let f = `${base}.jpg`;
+    let n = 2;
+    while (used.has(f)) f = `${base}-${n++}.jpg`;
+    used.add(f);
+    return f;
+  });
+}
+
 function renderProductMessage(o) {
   const {
     mode, // 'new' | 'forward' | 'update'
     info,
-    photoMsgIds = [],
+    photos = [],
     freshPhotoCount = 0,
     commentTexts = [],
     link = null,
     postHasPhoto = false,
     nameKnown = true,
+    index = 1,
+    total = 1,
   } = o;
 
+  const list = photos.length ? photos : postHasPhoto ? [{ m: 0, label: null }] : [];
   const slug = slugify(info.name);
-  const photoCount = mode === 'update' ? photoMsgIds.length : (postHasPhoto ? 1 : 0);
-  const files = Array.from({ length: photoCount }, (_, i) => `${slug}-${i + 1}.jpg`);
+  const files = photoFiles(slug, list);
 
-  const L = [];
   const HEADERS = {
     new: '🆕 <b>Post produk baru terdeteksi</b>',
-    forward: '📥 <b>Draft dari pesan yang Anda teruskan</b>',
+    forward: total > 1 ? `📥 <b>Draft produk ${index} dari ${total}</b>` : '📥 <b>Draft dari pesan yang Anda teruskan</b>',
     update: '📸 <b>Update foto/komentar untuk sebuah produk</b>',
   };
-  L.push(HEADERS[mode] || HEADERS.update);
-  L.push('');
-  L.push(`📌 Nama (tebakan): <b>${esc(nameKnown && info.name ? info.name : '(tidak terbaca — buka thread-nya di Telegram)')}</b>`);
+  const L = [HEADERS[mode] || HEADERS.update, ''];
+  L.push(`📌 Nama (tebakan): <b>${esc(nameKnown && info.name ? info.name : '(tidak terbaca — teruskan juga post deskripsinya)')}</b>`);
   L.push(`🏷️ Kategori (tebakan): ${info.category ? esc(info.category) : 'belum yakin → isi manual'}`);
 
   if (info.prices.length === 0) {
@@ -204,35 +285,45 @@ function renderProductMessage(o) {
     L.push('💰 Ada beberapa angka harga di teks, saya tidak menebak mana yang modal:');
     for (const p of info.prices.slice(0, 5)) L.push(`   • ${rupiah(p.value)} ("${esc(shorten(p.snippet, 40))}")`);
   }
-  if (info.variants) L.push(`🎨 Warna terdeteksi: ${esc(info.variants.join(', '))}`);
+  if (info.variants) {
+    L.push(`🎨 Varian/warna${info.variantsFromLabels ? ' (dari keterangan foto)' : ''}: ${esc(info.variants.join(', '))}`);
+  }
 
   L.push('');
-  if (mode === 'forward') {
+  const listPhotos = (withMsgId) => {
+    list.slice(0, 20).forEach((p, i) => {
+      const lab = p.label ? ` ← "${esc(p.label)}"` : '';
+      const mid = withMsgId && p.m ? ` (pesan #${p.m})` : '';
+      L.push(`${i + 1}. <code>${esc(files[i])}</code>${lab}${mid}`);
+    });
+    if (list.length > 20) L.push(`…dan ${list.length - 20} foto lainnya`);
+  };
+  if (mode === 'update') {
+    L.push(`📷 Foto baru: <b>${freshPhotoCount}</b> • Total foto sejauh ini: <b>${list.length}</b>`);
+    if (list.length) {
+      L.push('Simpan foto ke folder <code>images/</code> dengan nama ini (urutan = urutan kirim di Telegram):');
+      listPhotos(true);
+    }
+  } else if (mode === 'forward') {
+    if (list.length) {
+      L.push(`📷 Foto dalam kiriman ini: <b>${list.length}</b>. Simpan ke folder <code>images/</code> dengan nama ini:`);
+      listPhotos(false);
+    } else {
+      L.push('📷 Tidak ada foto di kiriman ini. Isi nama file foto di draft secara manual.');
+    }
+  } else {
     L.push(
-      postHasPhoto
-        ? '📷 Pesan ini berisi foto. Simpan sendiri fotonya dari Telegram ke folder <code>images/</code>, lalu sesuaikan nama file di draft.'
-        : '📷 Foto tidak dihitung otomatis pada mode teruskan. Simpan sendiri foto produk dari Telegram ke folder <code>images/</code>, lalu isi nama file di draft.'
-    );
-  } else if (mode === 'new') {
-    L.push(
-      postHasPhoto
+      list.length
         ? '📷 Post ini sendiri berisi foto (cek di Telegram).'
         : '📷 Belum ada foto di post ini. Foto biasanya ada di komentar — tunggu pesan "Update" berikutnya dari bot.'
     );
-  } else {
-    L.push(`📷 Foto baru: <b>${freshPhotoCount}</b> • Total foto sejauh ini: <b>${photoMsgIds.length}</b>`);
-    if (photoMsgIds.length) {
-      L.push('Simpan foto ke folder <code>images/</code> dengan nama ini (urutan = urutan kirim di Telegram):');
-      photoMsgIds.slice(0, 20).forEach((id, i) => L.push(`${i + 1}. <code>${esc(files[i])}</code> ← foto ke-${i + 1} (pesan #${id})`));
-      if (photoMsgIds.length > 20) L.push(`…dan ${photoMsgIds.length - 20} foto lainnya`);
-    }
   }
 
   if (commentTexts.length) {
     L.push('');
-    L.push('💬 Teks di komentar:');
+    L.push('💬 Teks tambahan:');
     for (const t of commentTexts.slice(0, 5)) L.push(`• ${esc(shorten(t, 150))}`);
-    if (commentTexts.length > 5) L.push(`…dan ${commentTexts.length - 5} komentar lain`);
+    if (commentTexts.length > 5) L.push(`…dan ${commentTexts.length - 5} teks lain`);
   }
   if (link) {
     L.push('');
@@ -246,4 +337,4 @@ function renderProductMessage(o) {
   return L.join('\n');
 }
 
-module.exports = { analyze, buildDraft, renderProductMessage, detectPrices, guessCategory, slugify };
+module.exports = { analyze, splitComments, groupForwarded, buildDraft, renderProductMessage, detectPrices, guessCategory, slugify, isLabel };

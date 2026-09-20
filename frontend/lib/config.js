@@ -19,5 +19,5 @@ module.exports = {
   // chat_id channel/grup TUJUAN /broadcast
   broadcastChatIds: parseList(process.env.BROADCAST_CHAT_IDS),
   // Jeda tunggu (ms) untuk menggabungkan foto album jadi 1 notifikasi
-  debounceMs: Number(process.env.DEBOUNCE_MS) || 4000,
+  debounceMs: Number(process.env.DEBOUNCE_MS) || 5000,
 };
