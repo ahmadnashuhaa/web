@@ -250,7 +250,7 @@ function photoFiles(slug, photos) {
   });
 }
 
-function renderProductMessage(o) {
+function composeMessage(o, showList) {
   const {
     mode, // 'new' | 'forward' | 'update'
     info,
@@ -291,6 +291,10 @@ function renderProductMessage(o) {
 
   L.push('');
   const listPhotos = (withMsgId) => {
+    if (!showList) {
+      L.push('(daftar nama file dipersingkat karena terlalu panjang — lihat "gallery" di draft)');
+      return;
+    }
     list.slice(0, 20).forEach((p, i) => {
       const lab = p.label ? ` ← "${esc(p.label)}"` : '';
       const mid = withMsgId && p.m ? ` (pesan #${p.m})` : '';
@@ -299,7 +303,7 @@ function renderProductMessage(o) {
     if (list.length > 20) L.push(`…dan ${list.length - 20} foto lainnya`);
   };
   if (mode === 'update') {
-    L.push(`📷 Foto baru: <b>${freshPhotoCount}</b> • Total foto sejauh ini: <b>${list.length}</b>`);
+    L.push(`📷 Total foto sejauh ini: <b>${list.length}</b> <i>(pesan ini diperbarui otomatis tiap ada foto/komentar baru)</i>`);
     if (list.length) {
       L.push('Simpan foto ke folder <code>images/</code> dengan nama ini (urutan = urutan kirim di Telegram):');
       listPhotos(true);
@@ -335,6 +339,11 @@ function renderProductMessage(o) {
   L.push('<b>Draft (ketuk kotak kode untuk menyalin):</b>');
   L.push(`<pre><code class="language-javascript">${esc(buildDraft(info, files))}</code></pre>`);
   return L.join('\n');
+}
+
+function renderProductMessage(o) {
+  const full = composeMessage(o, true);
+  return full.length > 3900 ? composeMessage(o, false) : full; // batas Telegram 4096 karakter
 }
 
 module.exports = { analyze, splitComments, groupForwarded, buildDraft, renderProductMessage, detectPrices, guessCategory, slugify, isLabel };

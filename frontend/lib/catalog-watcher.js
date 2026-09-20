@@ -2,11 +2,15 @@
 /**
  * FITUR 1 — memantau grup/channel sumber produk, lalu mengirim DRAFT ke chat pribadi pemilik.
  * TIDAK ada satu pun proses ke website. Hanya notifikasi.
+ *
+ * Catatan penting: Telegram mengirim pesan ke bot SATU PER SATU. Karena itu bot tidak "menunggu"
+ * pesan lain; ia mengirim 1 notifikasi per produk lalu MEMPERBARUI (edit) pesan itu setiap ada
+ * foto/komentar baru di thread yang sama.
  */
 const config = require('./config');
 const store = require('./store');
 const { analyze, splitComments, renderProductMessage } = require('./product-draft');
-const { notifyOwner, sleep } = require('./telegram-utils');
+const { sendToOwner, editMessage } = require('./telegram-utils');
 
 const TTL = 30 * 24 * 3600; // simpan data thread 30 hari
 const isSource = (id) => config.sourceChatIds.includes(String(id));
@@ -18,27 +22,36 @@ function threadLink(chatId, firstMsgId, rootId) {
   return `https://t.me/c/${s.slice(4)}/${firstMsgId}?thread=${rootId}`;
 }
 
+function parseItems(raw) {
+  const seen = new Set();
+  const items = [];
+  for (const r of raw || []) {
+    try {
+      const it = JSON.parse(r);
+      if (!seen.has(it.m)) { seen.add(it.m); items.push(it); }
+    } catch (_) { /* abaikan */ }
+  }
+  return items;
+}
+
 /** Notifikasi "produk baru" dari teks/caption post. */
 async function announceNewPost(api, text, postHasPhoto) {
   const info = analyze({ rootText: text });
-  await notifyOwner(api, renderProductMessage({ mode: 'new', info, postHasPhoto }));
+  await sendToOwner(api, renderProductMessage({ mode: 'new', info, postHasPhoto }));
 }
 
-/** Kirim ringkasan update (foto + teks komentar) untuk satu produk. */
-async function sendUpdate(api, { chatId, rootId, rootText, items, freshItems }) {
+function buildUpdateHtml({ chatId, rootId, rootText, items }) {
   const sorted = [...items].sort((a, b) => a.m - b.m);
   const { photos, texts } = splitComments(sorted);
   const info = analyze({ rootText, commentTexts: texts, labels: photos.map((p) => p.label) });
-  const html = renderProductMessage({
+  return renderProductMessage({
     mode: 'update',
     info,
     nameKnown: Boolean(rootText),
     photos,
-    freshPhotoCount: freshItems.filter((i) => i.t === 'photo').length,
     commentTexts: texts,
-    link: threadLink(chatId, (photos[0] ? photos[0].m : sorted[0].m), rootId),
+    link: threadLink(chatId, photos[0] ? photos[0].m : sorted[0].m, rootId),
   });
-  await notifyOwner(api, html);
 }
 
 /** Tentukan apakah pesan ini komentar pada post produk. */
@@ -75,34 +88,21 @@ async function handleComment(ctx) {
 
   // Mode sederhana (tanpa penyimpanan): 1 notifikasi per komentar.
   if (!store.enabled) {
-    return sendUpdate(ctx.api, { chatId, rootId, rootText, items: [item], freshItems: [item] });
+    return sendToOwner(ctx.api, buildUpdateHtml({ chatId, rootId, rootText, items: [item] }));
   }
 
-  // Mode lengkap: kumpulkan dulu, tunggu sebentar, hanya komentar TERAKHIR yang mengirim ringkasan.
+  // Mode lengkap: kumpulkan semua komentar thread ini, lalu perbarui SATU pesan notifikasi.
   const key = `thr:${chatId}:${rootId}`;
   await store.push(key, JSON.stringify(item), TTL);
-  await sleep(config.debounceMs);
+  const items = parseItems(await store.list(key));
+  const html = buildUpdateHtml({ chatId, rootId, rootText, items: items.length ? items : [item] });
 
-  const raw = await store.list(key);
-  if (!raw) return sendUpdate(ctx.api, { chatId, rootId, rootText, items: [item], freshItems: [item] });
+  const msgKey = `nmsg:${chatId}:${rootId}`;
+  const prev = await store.get(msgKey);
+  if (prev && (await editMessage(ctx.api, config.ownerId, Number(prev), html))) return;
 
-  const seen = new Set();
-  const items = [];
-  for (const r of raw) {
-    try {
-      const it = JSON.parse(r);
-      if (!seen.has(it.m)) { seen.add(it.m); items.push(it); }
-    } catch (_) { /* abaikan */ }
-  }
-  if (!items.length || items[items.length - 1].m !== item.m) return; // ada yang lebih baru, biar dia yang kirim
-
-  const repKey = `rep:${chatId}:${rootId}`;
-  const reported = Number(await store.get(repKey)) || 0;
-  const freshItems = items.slice(reported);
-  if (!freshItems.length) return;
-  await store.set(repKey, items.length, TTL);
-
-  await sendUpdate(ctx.api, { chatId, rootId, rootText, items, freshItems });
+  const id = await sendToOwner(ctx.api, html);
+  if (id) await store.set(msgKey, id, TTL);
 }
 
 async function handleGroupMessage(ctx) {

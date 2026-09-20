@@ -1,40 +1,57 @@
 'use strict';
 /**
  * Mode "teruskan": Anda meneruskan (forward) satu atau BEBERAPA pesan produk ke chat pribadi bot.
- * Bot menunggu sebentar sampai semua pesan tiba, lalu menyusun draft yang benar:
- *   - teks deskripsi        -> nama, harga, deskripsi produk
- *   - foto + keterangan pendek (mis. "Dusty Pink") -> foto & varian/warna produk itu
- * Tanpa Upstash, bot tidak bisa menunggu/menggabungkan (1 pesan = 1 draft).
+ *   - teks deskripsi                       -> nama, harga, deskripsi produk
+ *   - foto + keterangan pendek ("Dusty Pink") -> foto & varian/warna produk itu
+ *
+ * Telegram mengirim pesan satu per satu, jadi bot TIDAK menunggu. Setiap pesan yang tiba
+ * langsung dimasukkan ke "sesi" lalu draft di chat ini DIPERBARUI (edit). Pesan yang datang
+ * dalam 60 detik sejak pesan sebelumnya dianggap satu kiriman yang sama.
  */
 const config = require('./config');
 const store = require('./store');
 const { analyze, groupForwarded, renderProductMessage } = require('./product-draft');
-const { esc, sleep } = require('./telegram-utils');
+const { esc, editMessage } = require('./telegram-utils');
 
 const TTL = 3600;
+const SESSION_SECONDS = 60;
 const MAX_DRAFTS = 8;
 const isPhoto = (m) => Boolean(m.photo) || String((m.document && m.document.mime_type) || '').startsWith('image/');
 
-async function collectBatch(ctx, item) {
-  if (!store.enabled) return [item];
+const SEND_OPTS = { parse_mode: 'HTML', link_preview_options: { is_disabled: true } };
 
-  const key = `fwd:${ctx.from.id}`;
-  await store.push(key, JSON.stringify(item), TTL);
-  await sleep(config.debounceMs);
-
-  const raw = await store.list(key);
-  if (!raw) return [item];
-
-  const pushed = [];
-  for (const r of raw) {
-    try { pushed.push(JSON.parse(r)); } catch (_) { /* abaikan */ }
-  }
-  // Hanya pesan yang tiba PALING AKHIR yang menyusun hasil; yang lain berhenti.
-  if (!pushed.length || pushed[pushed.length - 1].m !== item.m) return null;
-  await store.del(key);
-
+function parseItems(raw) {
   const seen = new Set();
-  return pushed.filter((it) => (seen.has(it.m) ? false : seen.add(it.m)));
+  const items = [];
+  for (const r of raw || []) {
+    try {
+      const it = JSON.parse(r);
+      if (!seen.has(it.m)) { seen.add(it.m); items.push(it); }
+    } catch (_) { /* abaikan */ }
+  }
+  return items;
+}
+
+function renderGroups(items) {
+  const groups = groupForwarded(items);
+  const shown = groups.slice(0, MAX_DRAFTS);
+  const texts = shown.map((g, i) => {
+    const info = analyze({ rootText: g.rootText, commentTexts: g.notes, labels: g.photos.map((p) => p.label) });
+    return renderProductMessage({ mode: 'forward', info, photos: g.photos, nameKnown: Boolean(g.rootText), index: i + 1, total: groups.length });
+  });
+  const sources = new Map();
+  for (const it of items) if (it.s) sources.set(it.s.id, it.s.n);
+  const sourceText = sources.size
+    ? `ℹ️ Sumber pesan:\n${[...sources].map(([id, n]) => `• <b>${esc(n)}</b> — chat_id: <code>${id}</code>`).join('\n')}`
+    : null;
+  return { texts, sourceText, hidden: groups.length - shown.length };
+}
+
+/** Pastikan pesan ke-`slot` berisi `html`: edit kalau sudah ada, kirim baru kalau belum. */
+async function syncSlot(ctx, ids, slot, html) {
+  if (ids[slot] && (await editMessage(ctx.api, ctx.chat.id, ids[slot], html))) return;
+  const sent = await ctx.api.sendMessage(ctx.chat.id, html, SEND_OPTS);
+  ids[slot] = sent.message_id;
 }
 
 async function handleForward(ctx) {
@@ -63,30 +80,44 @@ async function handleForward(ctx) {
     s: src ? { id: src.id, n: src.title || src.username || 'chat' } : null,
   };
 
-  const items = await collectBatch(ctx, item);
-  if (!items || !items.length) return;
-
-  const groups = groupForwarded(items);
-  const shown = groups.slice(0, MAX_DRAFTS);
-  for (let i = 0; i < shown.length; i++) {
-    const g = shown[i];
-    const info = analyze({ rootText: g.rootText, commentTexts: g.notes, labels: g.photos.map((p) => p.label) });
-    await ctx.reply(
-      renderProductMessage({ mode: 'forward', info, photos: g.photos, nameKnown: Boolean(g.rootText), index: i + 1, total: groups.length }),
-      { parse_mode: 'HTML', link_preview_options: { is_disabled: true } }
-    );
-  }
-  if (groups.length > shown.length) {
-    await ctx.reply(`…dan ${groups.length - shown.length} produk lain tidak ditampilkan. Teruskan dalam jumlah lebih kecil.`);
+  // Tanpa penyimpanan: tidak bisa menggabungkan -> 1 pesan = 1 draft.
+  if (!store.enabled) {
+    const r = renderGroups([item]);
+    for (const t of r.texts) await ctx.api.sendMessage(ctx.chat.id, t, SEND_OPTS);
+    if (r.sourceText) await ctx.api.sendMessage(ctx.chat.id, r.sourceText, SEND_OPTS);
+    return;
   }
 
-  // Bonus: sebutkan chat_id sumber (berguna untuk SOURCE_CHAT_IDS).
-  const sources = new Map();
-  for (const it of items) if (it.s) sources.set(it.s.id, it.s.n);
-  if (sources.size) {
-    const lines = [...sources].map(([id, n]) => `• <b>${esc(n)}</b> — chat_id: <code>${id}</code>`);
-    await ctx.reply(`ℹ️ Sumber pesan:\n${lines.join('\n')}`, { parse_mode: 'HTML' });
+  const key = `fwd:${ctx.from.id}`;
+  const metaKey = `fwdmeta:${ctx.from.id}`;
+
+  // Sesi baru kalau pesan terakhir sudah lebih dari 60 detik yang lalu.
+  let meta = null;
+  try { meta = JSON.parse((await store.get(metaKey)) || 'null'); } catch (_) { meta = null; }
+  const now = Date.now();
+  if (!meta || now - meta.t > SESSION_SECONDS * 1000) {
+    await store.del(key);
+    meta = { ids: [], srcId: null };
   }
+
+  await store.push(key, JSON.stringify(item), TTL);
+  const items = parseItems(await store.list(key));
+  const r = renderGroups(items.length ? items : [item]);
+
+  const ids = meta.ids || [];
+  for (let i = 0; i < r.texts.length; i++) await syncSlot(ctx, ids, i, r.texts[i]);
+
+  let srcId = meta.srcId || null;
+  if (r.sourceText) {
+    const holder = { 0: srcId };
+    await syncSlot(ctx, holder, 0, r.sourceText);
+    srcId = holder[0];
+  }
+  if (r.hidden > 0) {
+    await ctx.reply(`…dan ${r.hidden} produk lain tidak ditampilkan. Teruskan dalam jumlah lebih kecil.`);
+  }
+
+  await store.set(metaKey, JSON.stringify({ t: now, ids, srcId }), TTL);
 }
 
 module.exports = { handleForward };
