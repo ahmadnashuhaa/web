@@ -20,4 +20,8 @@ module.exports = {
   broadcastChatIds: parseList(process.env.BROADCAST_CHAT_IDS),
   // Jeda tunggu (ms) untuk menggabungkan foto album jadi 1 notifikasi
   debounceMs: Number(process.env.DEBOUNCE_MS) || 5000,
+  // Kunci Gemini API (GRATIS dari Google AI Studio) - dipakai /doc /study /code /file(teks) /product analyze/validate
+  aiApiKey: (process.env.GEMINI_API_KEY || '').trim(),
+  // Nama model. Cek daftar model terbaru di Google AI Studio kalau default ini tidak ditemukan.
+  aiModel: (process.env.AI_MODEL || 'gemini-flash-lite-latest').trim(),
 };

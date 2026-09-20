@@ -14,17 +14,18 @@ const isOwner = (ctx) => Boolean(config.ownerId) && ctx.from && String(ctx.from.
 const HELP = [
   'Halo! 👋 Bot Dukion Shop aktif.',
   '',
-  'Perintah (khusus pemilik):',
+  'Perintah dasar (khusus pemilik):',
   '/broadcast &lt;pesan&gt; — kirim pesan teks ke semua channel/grup tujuan',
   '/id — lihat chat_id (ketik di grup, atau teruskan pesan channel ke sini)',
   '📥 Teruskan (forward) sebuah post produk ke chat ini → bot membuatkan draft kodenya',
   '/status — cek pengaturan bot',
+  '/help — lihat daftar lengkap perintah (product/file/doc/study/code/market)',
   '',
   'Notifikasi produk baru dikirim otomatis ke chat ini.',
 ].join('\n');
 
 function registerOwnerCommands(bot) {
-  bot.command(['start', 'help'], async (ctx) => {
+  bot.command('start', async (ctx) => {
     if (ctx.chat.type !== 'private') return;
     if (!isOwner(ctx)) return ctx.reply('Maaf, bot ini bersifat pribadi.');
     return ctx.reply(HELP, { parse_mode: 'HTML' });
@@ -59,6 +60,8 @@ function registerOwnerCommands(bot) {
         '',
         '<b>Tujuan broadcast (BROADCAST_CHAT_IDS):</b>',
         fmt(config.broadcastChatIds),
+        '',
+        'Ketik /settings untuk status fitur AI (product/file/doc/study/code).',
       ].join('\n'),
       { parse_mode: 'HTML' }
     );

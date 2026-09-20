@@ -20,6 +20,9 @@ const PRICE_PATTERNS = [
   /rp\.?\s*(\d[\d.,]*)\s*(rb|ribu|k|jt|juta)?(?![a-z])/gi,
   /(?:harga|hrg|modal|price)\s*[:=-]?\s*(?:rp\.?\s*)?(\d[\d.,]*)\s*(rb|ribu|k|jt|juta)?(?![a-z])/gi,
   /(?<![\w.,])(\d[\d.,]*)\s*(rb|ribu|k|jt|juta)(?![a-z])/gi,
+  // BARU: angka polos dengan titik/koma ribuan TANPA "Rp", kata kunci, atau akhiran rb/jt.
+  // Contoh yang sekarang tertangkap: "155.000", "1.250.000", "89,000".
+  /(?<![\d.,])(\d{1,3}(?:[.,]\d{3}){1,3})(?!\d)/g,
 ];
 
 function toNumber(raw, suffix) {
@@ -47,11 +50,16 @@ function detectPrices(text) {
 }
 
 function stripPrices(line) {
-  const order = [PRICE_PATTERNS[1], PRICE_PATTERNS[0], PRICE_PATTERNS[2]];
+  const order = [PRICE_PATTERNS[1], PRICE_PATTERNS[0], PRICE_PATTERNS[2], PRICE_PATTERNS[3]];
   return order.reduce((s, rx) => s.replace(rx, ''), line);
 }
 
 const rupiah = (n) => 'Rp' + String(n).replace(/\B(?=(\d{3})+(?!\d))/g, '.');
+
+/** Modal = harga grosir + markup 15%, dibulatkan ke atas ke kelipatan 500 terdekat. */
+function computeModal(grosir) {
+  return Math.ceil((grosir * 1.15) / 500) * 500;
+}
 
 /* ---------- Kategori ---------- */
 const CATEGORY_WORDS = {
@@ -116,7 +124,12 @@ function extractDesc(text) {
     .map((l) => l.trim())
     .filter(Boolean)
     .slice(1)
-    .filter((l) => !SKIP_LINE.test(l) && detectPrices(l).length === 0);
+    .filter((l) => !SKIP_LINE.test(l))
+    // PERBAIKAN: dulu seluruh baris yang mengandung harga langsung dibuang (ikut membuang
+    // kalimat deskripsi yang menempel di baris yang sama). Sekarang hanya ANGKA HARGANYA
+    // yang dicabut, sisa kalimat deskriptif tetap dipertahankan.
+    .map((l) => stripPrices(l).replace(/\s{2,}/g, ' ').trim())
+    .filter(Boolean);
   const d = cutWords(lines.join(' ').replace(/\s+/g, ' ').trim(), 160);
   return d || null;
 }
@@ -211,9 +224,11 @@ function buildDraft(info, files) {
   const list = files.length ? files : [PH.file];
   let modalLine;
   if (info.prices.length === 1) {
-    modalLine = `  "modal": ${info.prices[0].value}, // dari teks: ${q(info.prices[0].snippet)} - PASTIKAN ini memang harga modal`;
+    const grosir = info.prices[0].value;
+    const modal = computeModal(grosir);
+    modalLine = `  "modal": ${modal}, // harga grosir terbaca ${q(info.prices[0].snippet)} = ${grosir} → +15% dibulatkan = ${modal} - CEK ULANG`;
   } else {
-    const why = info.prices.length ? 'ada beberapa angka di teks, pilih sendiri' : 'harga tidak disebutkan di teks';
+    const why = info.prices.length ? 'ada beberapa angka di teks, pilih sendiri mana harga grosirnya lalu hitung +15%' : 'harga tidak disebutkan di teks';
     modalLine = `  "modal": ${q(PH.price)}, // ${why}`;
   }
   return [
@@ -280,9 +295,12 @@ function composeMessage(o, showList) {
   if (info.prices.length === 0) {
     L.push('💰 Harga: tidak disebutkan → sengaja dikosongkan (tidak saya karang)');
   } else if (info.prices.length === 1) {
-    L.push(`💰 Harga terdeteksi: <b>${rupiah(info.prices[0].value)}</b> (dari teks "${esc(shorten(info.prices[0].snippet, 40))}") — cek dulu apakah ini harga modal`);
+    const grosir = info.prices[0].value;
+    const modal = computeModal(grosir);
+    L.push(`💰 Harga grosir terdeteksi: <b>${rupiah(grosir)}</b> (dari teks "${esc(shorten(info.prices[0].snippet, 40))}")`);
+    L.push(`💸 Modal (grosir + 15%): <b>${rupiah(modal)}</b> — cek dulu, sesuaikan bila perlu`);
   } else {
-    L.push('💰 Ada beberapa angka harga di teks, saya tidak menebak mana yang modal:');
+    L.push('💰 Ada beberapa angka harga di teks, saya tidak menebak mana yang grosir:');
     for (const p of info.prices.slice(0, 5)) L.push(`   • ${rupiah(p.value)} ("${esc(shorten(p.snippet, 40))}")`);
   }
   if (info.variants) {
