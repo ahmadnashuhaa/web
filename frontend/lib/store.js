@@ -42,5 +42,11 @@ module.exports = {
     return n;
   },
   list: (k) => safe(['LRANGE', k, '0', '-1']),
+  // Menambah penghitung +1 (untuk pembatas pemakaian). Kunci kedaluwarsa otomatis setelah `ttl` detik.
+  async incr(k, ttl) {
+    const n = await safe(['INCR', k]);
+    if (n === 1) await safe(['EXPIRE', k, String(ttl)]);
+    return n;
+  },
   del: (k) => safe(['DEL', k]),
 };

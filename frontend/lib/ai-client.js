@@ -7,6 +7,7 @@
  * (bukan stack trace teknis) → sesuai prinsip error handling di Master Prompt bagian 25.
  */
 const config = require('./config');
+const { consumeAi } = require('./limits');
 
 const API_BASE = 'https://generativelanguage.googleapis.com/v1beta/models';
 const MAX_INLINE_BYTES = 14 * 1024 * 1024; // batas kirim file ke AI (base64 ~ +33%, limit request 20 MB)
@@ -22,6 +23,8 @@ async function generate(systemPrompt, parts, maxTokens) {
   if (!config.aiApiKey) {
     throw friendly('Fitur ini butuh AI tapi GEMINI_API_KEY belum diisi di Environment Variables Vercel.');
   }
+
+  await consumeAi(); // cek jatah harian pengguna (bot publik)
 
   let res;
   try {

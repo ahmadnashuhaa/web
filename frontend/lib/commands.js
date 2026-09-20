@@ -4,7 +4,7 @@
  * Prinsip biaya: semua yang bisa dikerjakan TANPA AI dikerjakan kode biasa (gratis, cepat, pasti).
  * AI (Gemini gratis) hanya dipakai untuk pekerjaan bahasa: ringkas, parafrase, terjemah, kuis, dsb.
  *
- * Khusus pemilik (OWNER_ID), chat pribadi. Pesan non-perintah dari orang lain diteruskan (next()).
+ * Untuk semua pengguna, chat pribadi saja (dijaga oleh limits.js). Data tiap pengguna dipisah per user ID.
  */
 const { InputFile, InlineKeyboard } = require('grammy');
 const config = require('./config');
@@ -15,8 +15,7 @@ const ft = require('./file-tools');
 const pt = require('./product-tools');
 const mk = require('./market');
 
-const isOwner = (ctx) => Boolean(config.ownerId) && ctx.from && String(ctx.from.id) === config.ownerId;
-const guard = (ctx) => ctx.chat && ctx.chat.type === 'private' && isOwner(ctx);
+const guard = (ctx) => Boolean(ctx.from) && ctx.chat && ctx.chat.type === 'private';
 
 /* ============================================================
  * Teks bantuan
@@ -1244,7 +1243,7 @@ function registerCommands(bot) {
   });
 
   bot.callbackQuery(/^cv:(\w+)$/, async (ctx) => {
-    if (!ctx.from || !isOwner(ctx)) return ctx.answerCallbackQuery();
+    if (!ctx.from) return ctx.answerCallbackQuery();
     await ctx.answerCallbackQuery();
     const uid = String(ctx.from.id);
     let rec = null;
@@ -1255,7 +1254,7 @@ function registerCommands(bot) {
   });
 
   bot.callbackQuery(/^act:(sum|ext|cv)$/, async (ctx) => {
-    if (!ctx.from || !isOwner(ctx)) return ctx.answerCallbackQuery();
+    if (!ctx.from) return ctx.answerCallbackQuery();
     await ctx.answerCallbackQuery();
     const a = ctx.match[1];
     if (a === 'sum') return wrap(ctx, () => aiTask(ctx, null, { table: FILE_AI, sub: 'summarize', rest: '', label: 'file' }));
