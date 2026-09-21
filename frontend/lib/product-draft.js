@@ -42,11 +42,25 @@ function detectPrices(text) {
     for (const m of String(text || '').matchAll(rx)) {
       const n = toNumber(m[1], m[2]);
       if (Number.isFinite(n) && n >= 1000 && n <= 50000000 && !found.has(n)) {
-        found.set(n, m[0].replace(/\s+/g, ' ').trim());
+        // `line` = seluruh baris tempat angka ditemukan (dipakai untuk membaca label "Grosir"/"Reseller")
+        const start = text.lastIndexOf('\n', m.index) + 1;
+        let end = text.indexOf('\n', m.index);
+        if (end === -1) end = text.length;
+        found.set(n, { snippet: m[0].replace(/\s+/g, ' ').trim(), line: text.slice(start, end) });
       }
     }
   }
-  return [...found].map(([value, snippet]) => ({ value, snippet }));
+  return [...found].map(([value, f]) => ({ value, snippet: f.snippet, line: f.line }));
+}
+
+/**
+ * Bila ada beberapa angka harga (mis. Reseller & Grosir), pilih yang TERTINGGI.
+ * Kembalikan { value, snippet, line, reason } atau null bila tidak ada harga.
+ */
+function pickPrice(prices) {
+  if (!prices || !prices.length) return null;
+  const top = prices.reduce((a, b) => (b.value > a.value ? b : a));
+  return { ...top, reason: prices.length > 1 ? 'harga tertinggi' : null };
 }
 
 function stripPrices(line) {
@@ -86,9 +100,20 @@ function guessCategory(title) {
 }
 
 /* ---------- Nama, warna, deskripsi ---------- */
+// Baris pembuka yang BUKAN nama produk: judul bagian ("Harga"), label harga, poin/bullet, atau link.
+const NON_NAME_LINE = /^(?:[-*•▪◦●]|\d+[.)]\s)|^(?:harga|hrg|price|reseller|grosir|ecer|eceran|modal|katalog|deskripsi|detail|spesifikasi|karakter|material|bahan|ukuran|size|warna|varian|variant|color|colour|info|ready|note|catatan)\b|https?:\/\/|www\./i;
+
+/** Nama = baris pertama, KECUALI baris itu judul bagian/label harga/bullet/link (maka nama dianggap tidak terbaca). */
+function firstLine(text) {
+  return String(text || '').split(/\r?\n/).map((l) => l.trim()).find(Boolean) || '';
+}
+
 function extractName(text) {
-  const line = String(text || '').split(/\r?\n/).map((l) => l.trim()).find(Boolean) || '';
+  const line = firstLine(text);
+  if (!line || NON_NAME_LINE.test(line)) return null;
   const clean = stripPrices(line)
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\s*\b(?:grosir|reseller|ecer|harga|hrg|modal|price)\s*[:=@\-]?\s*$/i, '') // sisa label harga di ujung judul
     .replace(/^[^\p{L}\p{N}]+/u, '')
     .replace(/[\s:;,.\-–—]+$/, '')
     .trim()
@@ -118,19 +143,40 @@ function cutWords(str, n) {
   return (i > n * 0.6 ? cut.slice(0, i) : cut).replace(/[\s,;:\-–]+$/, '') + '…';
 }
 
+/** Ukuran produk seperti "175x75cm" / "175 x 75 cm" (hanya bila ada satuan atau kata "ukuran"). */
+function extractSize(text) {
+  const t = String(text || '');
+  const m = t.match(/(\d+(?:[.,]\d+)?)\s*[x×]\s*(\d+(?:[.,]\d+)?)\s*(cm|mm|m)\b/i) ||
+    t.match(/ukuran\s*[:\-]?\s*(\d+(?:[.,]\d+)?)\s*[x×]\s*(\d+(?:[.,]\d+)?)()/i);
+  return m ? `${m[1]}x${m[2]}${m[3] ? m[3].toLowerCase() : ''}` : null;
+}
+
+// Baris yang hanya judul bagian / label kosong, mis. "Harga", "Karakter:", "Reseller: /pcs"
+const HEADING_ONLY = /^(?:harga|hrg|price|karakter|keterangan|deskripsi|detail|spesifikasi|fitur|kelebihan|info)\s*:?$/i;
+
 function extractDesc(text) {
-  const lines = String(text || '')
+  const src = String(text || '');
+  const nameUsed = extractName(src) !== null; // baris pertama hanya dibuang kalau memang dipakai sebagai nama
+  const lines = src
     .split(/\r?\n/)
     .map((l) => l.trim())
     .filter(Boolean)
-    .slice(1)
+    .slice(nameUsed ? 1 : 0)
     .filter((l) => !SKIP_LINE.test(l))
-    // PERBAIKAN: dulu seluruh baris yang mengandung harga langsung dibuang (ikut membuang
-    // kalimat deskripsi yang menempel di baris yang sama). Sekarang hanya ANGKA HARGANYA
-    // yang dicabut, sisa kalimat deskriptif tetap dipertahankan.
-    .map((l) => stripPrices(l).replace(/\s{2,}/g, ' ').trim())
-    .filter(Boolean);
-  const d = cutWords(lines.join(' ').replace(/\s+/g, ' ').trim(), 160);
+    .map((l) => {
+      const hadPrice = detectPrices(l).length > 0;
+      // Hanya ANGKA HARGANYA yang dicabut; sisa kalimat deskriptif dipertahankan.
+      let t = stripPrices(l).replace(/\/\s*(?:pcs|pc|pack|lusin|kodi|meter|m)\b/gi, '');
+      t = t.replace(/^\s*(?:[-*•▪◦●]|\d+[.)])\s+/, '').replace(/\s{2,}/g, ' ').trim();
+      // Baris yang tersisa cuma label harga ("Reseller:", "Grosir:") -> buang
+      if (hadPrice && t.replace(/[^\p{L}]/gu, '').split(/\s+/).join(' ').length === 0) return '';
+      if (hadPrice && /^(?:reseller|grosir|ecer|eceran|retail|agen|harga|hrg|modal|price)?\s*[:=\-]?\s*$/i.test(t)) return '';
+      return t.replace(/[\s:;,.]+$/, '');
+    })
+    .filter((l) => l && !HEADING_ONLY.test(l));
+  const size = extractSize(src);
+  const parts = size && !lines.some((l) => l.includes(size)) ? [`Ukuran ${size}`, ...lines] : lines;
+  const d = cutWords(parts.join('. ').replace(/\s+/g, ' ').trim(), 160);
   return d || null;
 }
 
@@ -162,6 +208,7 @@ function analyze({ rootText, commentTexts = [], labels = [] }) {
     name,
     category: guessCategory(name || ''),
     prices: detectPrices(all),
+    price: pickPrice(detectPrices(all)),
     variants: fromLabels.length ? fromLabels : extractVariants(all),
     variantsFromLabels: fromLabels.length > 0,
     desc: extractDesc(rootText),
@@ -223,13 +270,13 @@ function buildDraft(info, files) {
   const q = JSON.stringify;
   const list = files.length ? files : [PH.file];
   let modalLine;
-  if (info.prices.length === 1) {
-    const grosir = info.prices[0].value;
+  if (info.price) {
+    const grosir = info.price.value;
     const modal = computeModal(grosir);
-    modalLine = `  "modal": ${modal}, // harga grosir terbaca ${q(info.prices[0].snippet)} = ${grosir} → +15% dibulatkan = ${modal} - CEK ULANG`;
+    const via = info.price.reason ? ` (dipilih dari ${info.prices.length} angka: ${info.price.reason})` : '';
+    modalLine = `  "modal": ${modal}, // harga terbaca ${q(info.price.snippet)} = ${grosir}${via} → +15% dibulatkan = ${modal} - CEK ULANG`;
   } else {
-    const why = info.prices.length ? 'ada beberapa angka di teks, pilih sendiri mana harga grosirnya lalu hitung +15%' : 'harga tidak disebutkan di teks';
-    modalLine = `  "modal": ${q(PH.price)}, // ${why}`;
+    modalLine = `  "modal": ${q(PH.price)}, // harga tidak disebutkan di teks`;
   }
   return [
     '{',
@@ -289,19 +336,20 @@ function composeMessage(o, showList) {
     update: '📸 <b>Update foto/komentar untuk sebuah produk</b>',
   };
   const L = [HEADERS[mode] || HEADERS.update, ''];
-  L.push(`📌 Nama (tebakan): <b>${esc(nameKnown && info.name ? info.name : '(tidak terbaca → teruskan juga post deskripsinya)')}</b>`);
+  L.push(`📌 Nama (tebakan): <b>${esc(info.name && nameKnown ? info.name : nameKnown ? '(tidak terbaca → isi nama manual)' : '(tidak terbaca → teruskan juga post deskripsinya)')}</b>`);
   L.push(`🏷️ Kategori (tebakan): ${info.category ? esc(info.category) : 'belum yakin → isi manual'}`);
 
   if (info.prices.length === 0) {
     L.push('💰 Harga: tidak disebutkan → sengaja dikosongkan (tidak saya karang)');
-  } else if (info.prices.length === 1) {
-    const grosir = info.prices[0].value;
-    const modal = computeModal(grosir);
-    L.push(`💰 Harga grosir terdeteksi: <b>${rupiah(grosir)}</b> (dari teks "${esc(shorten(info.prices[0].snippet, 40))}")`);
-    L.push(`💸 Modal (grosir + 15%): <b>${rupiah(modal)}</b> → cek dulu, sesuaikan bila perlu`);
   } else {
-    L.push('💰 Ada beberapa angka harga di teks, saya tidak menebak mana yang grosir:');
-    for (const p of info.prices.slice(0, 5)) L.push(`   • ${rupiah(p.value)} ("${esc(shorten(p.snippet, 40))}")`);
+    const grosir = info.price.value;
+    const modal = computeModal(grosir);
+    L.push(`💰 Harga terdeteksi: <b>${rupiah(grosir)}</b> (dari teks "${esc(shorten(info.price.snippet, 40))}")`);
+    if (info.price.reason) {
+      L.push(`   ↳ dipilih dari ${info.prices.length} angka harga (${esc(info.price.reason)}). Angka lain:`);
+      for (const p of info.prices.filter((x) => x.value !== grosir).slice(0, 4)) L.push(`   • ${rupiah(p.value)} ("${esc(shorten(p.snippet, 40))}")`);
+    }
+    L.push(`💸 Modal (harga + 15%): <b>${rupiah(modal)}</b> → cek dulu, sesuaikan bila perlu`);
   }
   if (info.variants) {
     L.push(`🎨 Varian/warna${info.variantsFromLabels ? ' (dari keterangan foto)' : ''}: ${esc(info.variants.join(', '))}`);

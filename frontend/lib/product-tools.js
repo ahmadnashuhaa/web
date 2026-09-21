@@ -139,9 +139,11 @@ function assignLabel(p, key, value, notes, attrName) {
     case 'price': {
       const prices = detectPrices(`harga ${value}`);
       const plain = Number(String(value).replace(/[^\d]/g, ''));
-      if (prices.length === 1) p.price = prices[0].value;
-      else if (!prices.length && plain >= 1) p.price = plain;
-      else notes.push(`Ada beberapa angka harga untuk "${p.name}" → dikosongkan, isi manual.`);
+      if (prices.length) {
+        const top = Math.max(...prices.map((x) => x.value)); // beberapa angka harga -> ambil yang tertinggi
+        p.price = p.price != null && p.price !== '' ? Math.max(Number(p.price), top) : top;
+        if (prices.length > 1) notes.push(`Ada beberapa angka harga untuk "${p.name}" → dipilih yang tertinggi (${top}), cek ulang.`);
+      } else if (plain >= 1) p.price = plain;
       break;
     }
     case 'stock': {
@@ -267,8 +269,10 @@ function parseProductText(text) {
     const priceHit = detectPrices(line);
     if (priceHit.length && line.replace(/[\d.,\s]|rp|rb|ribu|jt|juta|k/gi, '').length < 3) {
       if (!cur) start(null);
-      if (priceHit.length === 1 && cur.price === null) cur.price = priceHit[0].value;
-      else notes.push(`Ada lebih dari satu harga untuk "${cur.name || 'produk'}" → tidak saya pilihkan, isi manual.`);
+      const top = Math.max(...priceHit.map((x) => x.value)); // beberapa harga -> ambil yang tertinggi
+      if (cur.price === null || cur.price === undefined || cur.price === '') cur.price = top;
+      else if (top > cur.price) cur.price = top;
+      if (priceHit.length > 1 || cur.price !== top) notes.push(`Ada lebih dari satu harga untuk "${cur.name || 'produk'}" → dipilih yang tertinggi (${cur.price}), cek ulang.`);
       blockStart = false;
       continue;
     }
@@ -438,8 +442,8 @@ function productsFromTable(rows) {
   for (const [k, set] of priceSeen) {
     if (set.size > 1) {
       const p = byName.get(k);
-      notes.push(`Harga "${p.name}" berbeda antar baris (${[...set].join(', ')}) → dikosongkan, tentukan sendiri.`);
-      p.price = null;
+      p.price = Math.max(...set); // harga berbeda antar baris -> ambil yang tertinggi
+      notes.push(`Harga "${p.name}" berbeda antar baris (${[...set].join(', ')}) → dipilih yang tertinggi (${p.price}), cek ulang.`);
     }
   }
   const products = [...byName.values()].map((p) => finalizeProduct(p, notes));
